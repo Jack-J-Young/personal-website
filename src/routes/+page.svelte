@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Home</title>
+	<meta name="description" content="My personal website for my projects" />
+</svelte:head>
+
 <script>
 	// No specific script logic required for this example
   </script>

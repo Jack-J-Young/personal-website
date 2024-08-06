@@ -1,5 +1,5 @@
 <svelte:head>
-    <title>JY - Whiteboard processor</title> 
+    <title>Whiteboard processor</title> 
     <meta name="description" content="Web app for processing pictures of whiteboards" />
 </svelte:head>
 
