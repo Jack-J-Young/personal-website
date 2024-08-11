@@ -147,7 +147,7 @@
             on:change={handleFileChange}
         />
     </div>
-    <div class="h-1/6 max-h-1/6 flex flex-row justify-center">
+    <div class="h-1/6 max-h-1/6 flex flex-row justify-center overflow-hidden">
         <button class="text-white upload-button p-4" on:click={triggerFileInput}>
             Upload Image</button
         >
@@ -157,7 +157,7 @@
         </button>
 		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[4px]"></Separator.Root>
         <div class="flex flex-col justify-center">
-            <span class="text-white p-4">Upload an image and click on the corners of the whiteboard, when the corners are correct, click 'Generate...' to process your image</span>
+            <span class="text-white p-4 overflow-scroll">Upload an image and click on the corners of the whiteboard, when the corners are correct, click 'Generate...' to process your image</span>
         </div>
     </div>
     <DebugPopup {showPopup} imageSrc={returnSrc} onClose={closePopup} />
