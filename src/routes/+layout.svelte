@@ -1,7 +1,7 @@
 <script>import "../app.css";
 import { Separator } from "bits-ui";</script>
 
-<div class="flex flex-col min-h-screen">
+<div class="flex flex-col h-screen">
 	<nav class="flex h-5 items-center space-x-4 text-sm p-10 back bg-navBar">
 		<div class="text-white">
 			<a href="/">
@@ -13,7 +13,7 @@ import { Separator } from "bits-ui";</script>
 		<!-- <Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[1px]"></Separator.Root> -->
 		<!-- <div>Whiteboard processor</div> -->
 	</nav>
-	<main class="flex-grow bg-background">
+	<main class="h-0 flex-grow box-border bg-background">
 		<slot />
 	</main>
 </div>

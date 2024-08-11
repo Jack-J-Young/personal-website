@@ -4,6 +4,7 @@
 </svelte:head>
 
 <script lang="ts">
+    import LoadingSpinner from "$lib/LoadingSpinner.svelte";
     import DebugPopup from "../../lib/DebugPopup.svelte";
     import ImageViewer from "../../lib/ImageViewer.svelte";
     import { Separator } from "bits-ui";
@@ -13,6 +14,7 @@
     let imageSrc = "";
     let returnSrc = "";
 
+    let isLoading = false;
     let showPopup = false;
 
     const processorApiUrl = 'https://api.jackyoung.xyz' // import.meta.env.VITE_WB_PROCESSOR_API;
@@ -71,10 +73,17 @@
     }
 
     async function requestTransformedImage() {
+        if (!imageSrc) {
+            alert("Please upload an image");
+            return;
+        }
+
         if (!imageViewer.hasQuads()) {
             alert("Please select a region to transform");
             return;
         }
+
+        isLoading = true;
 
         let imgResponse = await fetch(imageSrc);
         let blob = await imgResponse.blob();
@@ -95,18 +104,26 @@
 
         formData.append("quad_points", JSON.stringify(formPoints));
 
-        let response = await fetch(`${processorApiUrl}/whiteboard/process`, {
-            method: "POST",
-            body: formData,
+        try {
+            let response = await fetch(`${processorApiUrl}/whiteboard/process`, {
+                method: "POST",
+                body: formData,
+            });
+
+            isLoading = false;
+            // downloadFileFromResponse(response)
+            const blobData = await response.blob();
+            returnSrc = URL.createObjectURL(blobData);
+            showPopup = true;
             
-        });
-
-        // downloadFileFromResponse(response)
-        const blobData = await response.blob();
-        returnSrc = URL.createObjectURL(blobData);
-        showPopup = true;
-
-        console.log(response);
+            console.log(response);
+        }
+        catch (error) {
+            console.error("Error processing image", error);
+            alert("Error processing image, more details in developer console");
+            isLoading = false;
+            return;
+        }
     }
 
     function closePopup() {
@@ -117,20 +134,9 @@
     }
 </script>
 
-<div class="flex mx-auto flex-col">
-    <div class="h-1/6 flex flex-row">
-        <button class="text-white upload-button p-4" on:click={triggerFileInput}>
-            Upload Image</button
-        >
-		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[4px]"></Separator.Root>
-        <button class="text-white generate-button p-4" on:click={requestTransformedImage}>
-            Generate...
-        </button>
-		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[4px]"></Separator.Root>
-        <p class="text-white p-4">Upload an image and click on the corners of the whiteboard, when the corners are correct, click 'Generate...' to process your image</p>
-    </div>
-    <div class="min-h-5/6 max-h-5/6 p-4">
-        <div class="image-viewer">
+<div class="h-full flex mx-auto flex-col">
+    <div class="h-5/6 max-h-5/ p-4">
+        <div class="h-full w-full">
             <ImageViewer {imageSrc} bind:this={imageViewer} />
         </div>
         <input
@@ -140,6 +146,19 @@
             accept="image/*"
             on:change={handleFileChange}
         />
+    </div>
+    <div class="h-1/6 max-h-1/6 flex flex-row justify-center">
+        <button class="text-white upload-button p-4" on:click={triggerFileInput}>
+            Upload Image</button
+        >
+		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[4px]"></Separator.Root>
+        <button class="text-white generate-button p-4" on:click={requestTransformedImage}>
+            {isLoading ? 'Processing...' : 'Process'}
+        </button>
+		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[4px]"></Separator.Root>
+        <div class="flex flex-col justify-center">
+            <span class="text-white p-4">Upload an image and click on the corners of the whiteboard, when the corners are correct, click 'Generate...' to process your image</span>
+        </div>
     </div>
     <DebugPopup {showPopup} imageSrc={returnSrc} onClose={closePopup} />
 </div>

@@ -91,8 +91,6 @@
         const x = (event.clientX - imgRect.left) * scaleX;
         const y = (event.clientY - imgRect.top) * scaleY;
 
-        console.log(`Clicked coordinates on image: (${x}, ${y})`);
-
         if (quadPoints.length >= 4) {
             quadPoints = [];
             drawQuadPreview(quadPoints);
@@ -237,16 +235,17 @@
 </script>
 
 {#if imageSrc}
-    <div class="parent-div">
+    <div class="h-full w-full">
         <!-- <input type="file" accept="image/*" on:change="{handleFileChange}" /> -->
         <!-- {#if imageSrc} -->
         <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <div class="image-container">
+        <div class="h-full w-full flex justify-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
             <!-- svelte-ignore a11y-img-redundant-alt -->
             <img src={imageSrc} alt="Error unable to render image" />
             <canvas
+                class="h-auto w-auto max-h-full max-w-full"
                 bind:this={overlayCanvas}
                 on:click={handleImageClick}
                 tabindex="0"
