@@ -39,9 +39,9 @@
 		</p>
 		<h2 class="text-white text-2xl text-center p-4">About me</h2>
 		<p class="text-white text-lg leading-relaxed">
-			Im a computer science graduate currently working as a junior software developer at Arcadis
+			I'm a computer science graduate currently working as a junior software developer at Arcadis
 		</p>
-		<h2 class="text-white text-2xl text-center p-4">About me</h2>
+		<h2 class="text-white text-2xl text-center p-4">Contact</h2>
 		<p class="text-white text-lg leading-relaxed">
 			Email: <a href="mailto:jackjordanyoung@gmail.com">jackjordanyoung@gmail.com</a>
 		</p>
