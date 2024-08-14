@@ -17,8 +17,8 @@
     let isLoading = false;
     let showPopup = false;
 
-    const processorApiUrl = 'https://api.jackyoung.xyz' // import.meta.env.VITE_WB_PROCESSOR_API;
-    // const processorApiUrl = 'https://localhost' // import.meta.env.VITE_WB_PROCESSOR_API;
+    const processorApiUrl = 'https://api.jackyoung.xyz'
+    //const processorApiUrl = 'https://localhost';
 
     function handleFileChange(event: any) {
         const target = event.target;
@@ -28,7 +28,6 @@
             reader.onload = (e) => {
                 var result = e.target?.result;
                 if (typeof result === "string") {
-                    console.log("Image loaded");
                     imageSrc = result;
                     imageViewer.loadImageFromSrc(imageSrc);
                 }
@@ -116,7 +115,6 @@
             returnSrc = URL.createObjectURL(blobData);
             showPopup = true;
             
-            console.log(response);
         }
         catch (error) {
             console.error("Error processing image", error);
