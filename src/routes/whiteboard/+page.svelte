@@ -17,8 +17,8 @@
     let isLoading = false;
     let showPopup = false;
 
-    const processorApiUrl = 'https://api.jackyoung.xyz'
-    //const processorApiUrl = 'https://localhost';
+    // const processorApiUrl = 'https://api.jackyoung.xyz'
+    const processorApiUrl = 'https://localhost';
 
     function handleFileChange(event: any) {
         const target = event.target;
