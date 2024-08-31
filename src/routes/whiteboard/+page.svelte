@@ -8,6 +8,24 @@
     import DebugPopup from "../../lib/DebugPopup.svelte";
     import ImageViewer from "../../lib/ImageViewer.svelte";
     import { Separator } from "bits-ui";
+    import { onMount } from "svelte";
+
+    // TEMPOPARY
+    // TODO: move server
+    import { AlertDialog } from "bits-ui";
+    let isOpen = false;
+
+    // Trigger the dialog to open on page load
+    onMount(() => {
+        isOpen = true;
+    });
+
+    function closeDialog() {
+        isOpen = false;
+    }
+
+
+
     // import UIButtons from '../UIButtons.svelte';
     let imageViewer: ImageViewer;
 
@@ -133,6 +151,35 @@
 </script>
 
 <div class="h-full flex mx-auto flex-col">
+    <AlertDialog.Root open={isOpen} >
+        <AlertDialog.Trigger>
+          <button class="hidden">Trigger</button>
+        </AlertDialog.Trigger>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay
+            transitionConfig={{ duration: 150 }}
+            class="fixed inset-0 z-50 bg-black/80"
+          />
+          <AlertDialog.Content
+            class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-[94%] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-card-lg border bg-background p-7 shadow-popover outline-none sm:max-w-lg md:w-full"
+          >
+            <div class="flex flex-col gap-4 pb-6">
+              <AlertDialog.Title class="text-lg font-semibold tracking-tight"
+                >API Down</AlertDialog.Title
+              >
+              <AlertDialog.Description class="text-sm text-foreground-alt">
+                I'm currently moving the API to a new server, please check back later.
+              </AlertDialog.Description>
+            </div>
+            <div class="flex w-full items-center justify-center gap-2">
+              <AlertDialog.Cancel
+                class="inline-flex h-input w-full items-center justify-center rounded-input bg-muted text-[15px] font-medium shadow-mini transition-all hover:bg-dark-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-98"
+                >Close</AlertDialog.Cancel
+              >
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     <div class="h-5/6 max-h-5/ p-4">
         <div class="h-full w-full">
             <ImageViewer {imageSrc} bind:this={imageViewer} />
