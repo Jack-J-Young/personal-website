@@ -1,11 +1,24 @@
 <script lang="ts">
+    import Monaco from 'svelte-monaco';
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import Console from '$lib/Console.svelte';
+    import { Tabs } from 'bits-ui';
+    import { Pane, Splitpanes } from 'svelte-splitpanes';
 
     // Access the dynamic `id` from the route
     let id = $page.params.id;
 
-    let consoleOutput: String[] = [];
+    // Monaco editor options
+    let value = `-- Write your code here
+local exists, data = turtle.inspect()
+return {
+    exists = exists,
+    data = data
+}`;
+
+    // Turtle API Mappings
+    let consoleOutput: Object[] = [];
 
     let codeCallbacks: {
         [hash: string]: (data: String) => void
@@ -14,44 +27,40 @@
     let listening = false;
     async function listenForReturn() {
         listening = true;
-        fetch(`http://localhost:8080/deploy/${id}/return`, {
+        let response = await fetch(`http://localhost:8080/deploy/${id}/return`, {
             method: "GET",
-        }).then(async (response) => {
-            let responseJson: {
-                [hash: string]: String
-            } = await response.json();
-
-            let timestamps = Object.keys(responseJson);
-            timestamps.sort((a, b) => parseInt(a) - parseInt(b));
-            
-
-            for (let ts of timestamps) {
-                if (codeCallbacks[ts]) {
-                    let returnData: any = responseJson[ts];
-                    if ("result" in returnData) {
-                        consoleOutput = [
-                            ...consoleOutput,
-                            returnData.result
-                        ]
-                        codeCallbacks[ts](returnData.result);
-                    } else if ("error" in returnData) {
-                        consoleOutput = [
-                            ...consoleOutput,
-                            returnData.error
-                        ]
-
-                    }
-
-                    delete codeCallbacks[ts];
-                }
-            }
         });
 
-        await new Promise(r => setTimeout(r, 5000));
+        let responseJson: {
+            [hash: string]: String
+        } = await response.json();
+
+        let timestamps = Object.keys(responseJson);
+        timestamps.sort((a, b) => parseInt(a) - parseInt(b));
+        
+
+        for (let ts of timestamps) {
+            if (codeCallbacks[ts]) {
+                let returnData: any = responseJson[ts];
+                if ("result" in returnData) {
+                    codeCallbacks[ts](returnData.result);
+                } else if ("error" in returnData) {
+                    consoleOutput = [
+                        ...consoleOutput,
+                        returnData.error
+                    ]
+                }
+
+                delete codeCallbacks[ts];
+            }
+        }
+
+        await new Promise(r => setTimeout(r, 200));
         
         if (Object.keys(codeCallbacks).length > 0) {
-            listenForReturn();
+            await listenForReturn();
         }
+
         listening = false;
     }
 
@@ -86,27 +95,26 @@
                     ...consoleOutput,
                     data
                 ]
-                console.log(consoleOutput);
             });   
         }
     }
 
     async function executeCode() {
-        const textEditor = document.querySelector("#text-editor");
-        if (textEditor) {
-            runCode(textEditor.value, (data) => {
-                consoleOutput = [
-                    ...consoleOutput,
-                    data
-                ]
-                console.log(consoleOutput);
-            });
-        }
+        runCode(value, (data) => {
+            console.log(data);
+            consoleOutput = [
+                ...consoleOutput,
+                data
+            ]
+        });
     }
 
     function shutdown() {
         fetch(`http://localhost:8080/deploy/${id}/shutdown`, {
             method: "GET",
+        });
+        fetch(`http://localhost:8080/deploy/${id}/code`, {
+            method: "DELETE",
         });
     }
 
@@ -130,31 +138,98 @@
             </div>
         </div>
     </div>
-    <div class="grow flex">
-        <div class="files-panel bg-slate-500 w-full h-100" style="width:100px">
+    <Splitpanes theme="default-theme" class="grow flex">
+        <Pane class="files-panel bg-slate-500 w-full h-100" size={20}>
             files-panel
-        </div>
-        <div class="editor-panel grow flex">
-            <div class="fles flex-col grow">
-                <div class="grow bg-yellow-200 flex">
-                    <textarea
-                        name="Text1" 
-                        id= "text-editor"
-                        class="w-full grow p-4 m-4 resize-none border-2 border-black bg-slate-800 text-white"
-                        cols="40"
-                        rows="20"
-                    ></textarea>
-                </div>
-                <div style="height:250px" class="w-full overflow-scroll">
-                    {#each consoleOutput as line}
-                        <p>{line}</p>
-                    {/each}
-                </div>
-            </div>
+        </Pane>
+        <Pane class="editor-panel grow flex r-0">
+            <Splitpanes horizontal theme="default-theme" style="width:0 !important" class="grow">
+                <Pane class="grow bg-yellow-200 flex">
+                    <!-- event.detail is the monaco instance. All options are reactive! -->
+                    <Monaco
+                        options={{ language: 'lua', automaticLayout: true }}
+                        theme="vs-dark"
+                        on:ready={(event) => console.log(event.detail)}
+                        bind:value
+                    />
+                </Pane>
+                <Pane size={30}>
+                    <Tabs.Root value="console" class="bg-slate-950 h-full flex flex-col">
+                        <Tabs.List class="pt-1 pl-1 pr-1">
+                            <Tabs.Trigger
+                                value="console"
+                                class="bg-stone-900 data-[state=active]:bg-stone-800 text-white pl-3 pr-3 rounded-t-md">
+                                Console
+                            </Tabs.Trigger>
+                            <Tabs.Trigger
+                                value="world-view"
+                                class="bg-stone-900 data-[state=active]:bg-stone-800 text-white pl-3 pr-3 rounded-t-md">
+                                World View
+                            </Tabs.Trigger>
+                        </Tabs.List>
+                            <Tabs.Content value="console"
+                                class="grow">
+                                <Console bind:consoleOutput />
+                            </Tabs.Content>
+                            <Tabs.Content value="world-view">
+                                <div class="bg-blue-200">
+                                    World View
+                                </div>
+                            </Tabs.Content>
+                    </Tabs.Root>
+                </Pane>
+	        </Splitpanes>
             <div class="buttons-panel flex flex-col" style="width:100px">
                 <button class="bg-white m-2 p-2" on:click={executeCode}>Execute</button>
                 <button class="bg-red-700 text-white m-2 p-2" on:click={shutdown}>Shutdown</button>
             </div>
-        </div>
-    </div>
+        </Pane>
+    </Splitpanes>
 </div>
+
+<style>
+
+    .default-theme.splitpanes__pane {
+  background-color: #f8f8f8;
+}
+
+.splitpanes.default-theme.splitpanes__splitter {
+  background-color: #ccc !important;
+  position: relative;
+}
+
+.default-theme.splitpanes__splitter:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: opacity 0.4s;
+  background-color: rgba(255, 0, 0, 0.3);
+  opacity: 0;
+  z-index: 1;
+}
+
+.default-theme.splitpanes__splitter:hover:before {
+  opacity: 1;
+}
+
+.default-theme.splitpanes__splitter.splitpanes__splitter__active {
+  z-index: 2; /* Fix an issue of overlap fighting with a near hovered splitter */
+}
+
+.default-theme.splitpanes--vertical > .splitpanes__splitter:before {
+  left: -30px;
+  right: -30px;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.default-theme.splitpanes--horizontal > .splitpanes__splitter:before {
+  top: -30px;
+  bottom: -30px;
+  width: 100%;
+  cursor: row-resize;
+}
+
+    
+</style>

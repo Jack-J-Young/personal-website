@@ -39,7 +39,7 @@
                         codeCallbacks[ts](returnData.result);
                     } else if ("error" in returnData) {
                         // TODO: handle error
-                        print(returnData.error);
+                        console.log(returnData.error);
                     }
 
                     delete codeCallbacks[ts];
@@ -117,34 +117,32 @@
         blocks = [...blocks, new Block(x, y, z, name)];
     }
 
-    function inspect(pos: {x: number, y: number, z: number}, dir: {x: number, y: number}) {
+    function inspect() {
         // add blocks above and below and in front
         //blocks = [...blocks, new Block(x, y, z, hashStringToHex(`(${x},${y},${z})`))];
-
-
         runCode(`require("player-link")\nreturn Inspect()`, (inspect) => {
                 // to jsonx
                 if (inspect.data) {
                     addBlock(
-                        pos.x + dir.x,
-                        pos.y,
-                        pos.z + dir.y,
+                        turtlePos.x + turtleDir.x,
+                        turtlePos.y,
+                        turtlePos.z + turtleDir.y,
                         hashStringToHex(inspect.data.name)
                     )
                 }
                 if (inspect.dataUp) {
                     addBlock(
-                        pos.x,
-                        pos.y + 1,
-                        pos.z,
+                        turtlePos.x,
+                        turtlePos.y + 1,
+                        turtlePos.z,
                         hashStringToHex(inspect.dataUp.name)
                     )
                 }
                 if (inspect.dataDown) {
                     addBlock(
-                        pos.x,
-                        pos.y - 1,
-                        pos.z,
+                        turtlePos.x,
+                        turtlePos.y - 1,
+                        turtlePos.z,
                         hashStringToHex(inspect.dataDown.name)
                     )
                 }
@@ -153,161 +151,104 @@
     }
 
     function turnLeft() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.turnLeft()`, (succ) => {
-            if (succ == "false") {
+            if (succ != "false") {
                 turtleDir = {x: turtleDir.y, y: -turtleDir.x};
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function turnRight() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.turnRight()`, (succ) => {
             if (succ != "false") {
                 turtleDir = {x: -turtleDir.y, y: turtleDir.x};
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function forward() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.forward()`, (succ) => {
             if (succ != "false") {
                 turtlePos.x += turtleDir.x;
                 turtlePos.z += turtleDir.y;
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function back() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.back()`, (succ) => {
             if (succ != "false") {
                 turtlePos.x -= turtleDir.x;
                 turtlePos.z -= turtleDir.y;
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function down() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.down()`, (succ) => {
             if (succ != "false") {
                 turtlePos.y -= 1;
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function up() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.up()`, (succ) => {
             if (succ != "false") {
                 turtlePos.y += 1;
             }
         });
-        inspect(pos, dir);
-    }
-    
-    function hashStringToHex(str: string): string {
-        let hash = 0;
-
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash; // Convert to 32-bit integer
-        }
-
-        // Convert hash to hexadecimal and ensure it's 6 digits
-        let hex = (hash & 0xFFFFFF).toString(16).toUpperCase();
-
-        // Pad with leading zeros if necessary
-        while (hex.length < 6) {
-            hex = '0' + hex;
-        }
-
-        return hex;
+        inspect();
     }
 
     function dig() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.dig()`, (succ) => {
             if (succ != "false") {
                 removeBlock(turtlePos.x + turtleDir.x, turtlePos.y, turtlePos.z + turtleDir.y);
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function digUp() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.digUp()`, (succ) => {
             if (succ != "false") {
                 removeBlock(turtlePos.x, turtlePos.y + 1, turtlePos.z);
             }
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function digDown() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.digDown()`, (succ) => {
             if (succ != "false") {
                 removeBlock(turtlePos.x, turtlePos.y - 1, turtlePos.z);
             }
         });
-
-        inspect(pos, dir);
+        inspect();
     }
 
     function place() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.place()`, _ => {
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function placeUp() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.placeUp()`, _ => {
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function placeDown() {
-        let pos = turtlePos;
-        let dir = turtleDir;
-
         runCode(`return turtle.placeDown()`, _ => {
         });
-        inspect(pos, dir);
+        inspect();
     }
 
     function editor() {
