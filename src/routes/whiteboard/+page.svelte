@@ -113,13 +113,13 @@
         let formData = new FormData();
         formData.append("image", blob);
         let quadPoints = imageViewer.getQuadPoints();
-        let formPoints = [];
+        let formPoints = "";
 
         for (let i = 0; i < quadPoints.length; i++) {
-            formPoints.push([quadPoints[i].x, quadPoints[i].y]);
+            formPoints += `${i == 0 ? '' : ','}${quadPoints[i].x},${quadPoints[i].y}`;
         }
 
-        formData.append("quad_points", JSON.stringify(formPoints));
+        formData.append("quad_points", formPoints);
 
         try {
             let response = await fetch(`${processorApiUrl}/whiteboard/process`, {
