@@ -1,14 +1,8 @@
 <script lang="ts">
-    import type { PageData } from "../client/$types";
-    import { T, Canvas } from '@threlte/core'
-	import { Grid, OrbitControls, TransformControls } from '@threlte/extras'
-	import * as Three from 'three'
     import { Block } from '$lib/types/blocks'
-    import { get } from "svelte/store";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
-
-    export let data: PageData;
+    import WorldView from "$lib/WorldView.svelte";
 
     let id = $page.params.id;
 
@@ -127,7 +121,7 @@
                         turtlePos.x + turtleDir.x,
                         turtlePos.y,
                         turtlePos.z + turtleDir.y,
-                        hashStringToHex(inspect.data.name)
+                        inspect.data.name
                     )
                 }
                 if (inspect.dataUp) {
@@ -135,7 +129,7 @@
                         turtlePos.x,
                         turtlePos.y + 1,
                         turtlePos.z,
-                        hashStringToHex(inspect.dataUp.name)
+                        inspect.dataUp.name
                     )
                 }
                 if (inspect.dataDown) {
@@ -143,7 +137,7 @@
                         turtlePos.x,
                         turtlePos.y - 1,
                         turtlePos.z,
-                        hashStringToHex(inspect.dataDown.name)
+                        inspect.dataDown.name
                     )
                 }
             }
@@ -297,47 +291,6 @@
         </div>
     </div>
     <div class="{background} transition-colors flex-grow shadow-lg shadow-black drop-shadow-lg">
-        <Canvas>
-            <!-- Camera -->
-            <T.PerspectiveCamera position={[20, 20, 20]} fov={50} makeDefault>
-                <!-- Controls -->
-                <OrbitControls enableDamping />
-            </T.PerspectiveCamera>
-
-            <!-- Lights the scene equally -->
-            <T.AmbientLight color="#ffffff" intensity={0.2} />
-
-            <!-- Light that casts a shadow -->
-            <T.DirectionalLight
-                color="#ffffff"
-                intensity={2}
-                position={[10, 10, 0]}
-                shadow.camera.top={8}
-                castShadow
-            />
-            
-            <T.Mesh
-                position.x={turtlePos.x}
-                position.y={turtlePos.y}
-                position.z={turtlePos.z}
-                castShadow
-            >
-                <T.BoxGeometry args={[1, 1, 1]} />
-                <T.MeshStandardMaterial color="#ffff00" />
-            </T.Mesh>
-
-            <!-- Blocks -->
-            {#each blocks as block}
-                <T.Mesh
-                    position.x={block.x}
-                    position.y={block.y}
-                    position.z={block.z}
-                    castShadow
-                >
-                    <T.BoxGeometry args={[1, 1, 1]} />
-                    <T.MeshStandardMaterial color=#{hashStringToHex(block.name)} />
-                </T.Mesh>
-            {/each}
-        </Canvas>
+        <WorldView {blocks} {turtlePos} />
     </div>
 </div>

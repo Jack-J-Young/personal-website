@@ -28,7 +28,7 @@
         <div
             class="object-text {!isExpanded ? 'flex-row' : 'flex-col'}"
             role="button">
-            <button class="text-left" on:click={toggleExpand}>Object:</button>
+            <button class="text-left w-fit" on:click={toggleExpand}>Object:</button>
             {#if isExpanded}
                 {#each Object.entries(data) as [key, value]}
                     <div class="flex flex-row pl-4">
@@ -49,7 +49,7 @@
         >
             {isExpanded ? "▼" : "▶"}
         </button>
-        <button class="object-text {!isExpanded ? 'flex-row' : 'flex-col'}" on:click={toggleExpand}>Array:
+        <button class="object-text w-fit {!isExpanded ? 'flex-row' : 'flex-col'}" on:click={toggleExpand}>Array:
             {#if isExpanded}
                 <div class="indent">
                     {#each data as item, index}

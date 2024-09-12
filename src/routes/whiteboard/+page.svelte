@@ -18,7 +18,7 @@
     let showPopup = false;
 
     // const processorApiUrl = 'https://api.jackyoung.xyz'
-    const processorApiUrl = 'https://localhost';
+    const processorApiUrl = 'http://192.168.1.7:3000';
 
     function handleFileChange(event: any) {
         const target = event.target;
@@ -104,7 +104,7 @@
         formData.append("quad_points", JSON.stringify(formPoints));
 
         try {
-            let response = await fetch(`${processorApiUrl}/whiteboard/process`, {
+            let response = await fetch(`${processorApiUrl}/api/whiteboard/process`, {
                 method: "POST",
                 body: formData,
             });

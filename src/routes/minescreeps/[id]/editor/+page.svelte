@@ -5,9 +5,19 @@
     import Console from '$lib/Console.svelte';
     import { Tabs } from 'bits-ui';
     import { Pane, Splitpanes } from 'svelte-splitpanes';
+    import WorldView from '$lib/WorldView.svelte';
+    import { Block } from '$lib/types/blocks';
+    import { onMount } from 'svelte';
+
 
     // Access the dynamic `id` from the route
     let id = $page.params.id;
+
+    // WV bindings
+    let blocks: Block[] = [
+        new Block(0, 0, 0, "minecraft:stone")
+    ];
+    let turtlePos = { x: 0, y: 0, z: 0 };
 
     // Monaco editor options
     let value = `-- Write your code here
@@ -16,6 +26,115 @@ return {
     exists = exists,
     data = data
 }`;
+
+    // Debug refrash
+
+    onMount(() => {
+        async function fetchData() {
+            let response = await fetch(
+                `http://localhost:8080/deploy/${id}/debug`,
+                {
+                    method: "GET",
+                }
+            );
+            
+            if (response.status == 200) {
+                let responseJson = await response.json();
+                for (let key in responseJson) {
+                    let debug = responseJson[key];
+
+                    if (debug.type == "wv") {
+                        let wvData  = debug.data;
+                        if (wvData.type == "inspect") {
+                            let blockData = wvData.data;
+
+                            for (let block of blockData) {
+                                if (blocks.filter(b => b.x == block.x && b.y == block.y && b.z == block.z && b.name == block.name).length == 0) {
+                                    blocks = [
+                                        ...blocks,
+                                        new Block(
+                                            block.x,
+                                            block.y,
+                                            block.z,
+                                            block.data.name
+                                        )
+                                    ]
+                                }
+                            }
+                        } else if (wvData.type == "pos") {
+                            let posData = wvData.data;
+                            turtlePos.x = posData.x;
+                            turtlePos.y = posData.y;
+                            turtlePos.z = posData.z;
+                            // turtlePos = {
+                            //     x: posData.x,
+                            //     y: posData.y,
+                            //     z: posData.z
+                            // }
+                        }
+                    }
+                }
+            }
+        }
+        
+        const interval = setInterval(fetchData, 3000);
+        fetchData();
+
+        return () => clearInterval(interval);
+    });
+
+    // async function refreshDebug() {
+    //     while (true) {
+    //         if (id == undefined) {
+    //             return;
+    //         }
+
+
+
+    //     let response = await fetch(
+    //         `http://localhost:8080/deploy/${id}/debug`,
+    //         {
+    //             method: "GET",
+    //         }
+    //     );
+        
+    //     if (response.status == 200) {
+    //         let responseJson = await response.json();
+    //         for (let key in responseJson) {
+    //             let debug = responseJson[key];
+
+    //             if (debug.type == "wv") {
+    //                 let wvData  = debug.data;
+    //                 if (wvData.type == "inspect") {
+    //                     let blockData = wvData.data;
+
+    //                     for (let block of blockData) {
+    //                         if (blocks.filter(b => b.x == block.x && b.y == block.y && b.z == block.z && b.name == block.name).length == 0) {
+    //                             blocks = [
+    //                                 ...blocks,
+    //                                 new Block(
+    //                                     block.x,
+    //                                     block.y,
+    //                                     block.z,
+    //                                     block.data.name
+    //                                 )
+    //                             ]
+    //                         }
+    //                     }
+    //                 } else if (wvData.type == "pos") {
+    //                     let posData = wvData.data;
+    //                     turtlePos.x = posData.x;
+    //                     turtlePos.y = posData.y;
+    //                     turtlePos.z = posData.z;
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     await new Promise(r => setTimeout(r, 1000));
+    //     refreshDebug();
+    // }
+
 
     // Turtle API Mappings
     let consoleOutput: Object[] = [];
@@ -27,9 +146,12 @@ return {
     let listening = false;
     async function listenForReturn() {
         listening = true;
-        let response = await fetch(`http://localhost:8080/deploy/${id}/return`, {
-            method: "GET",
-        });
+        let response = await fetch(
+            `http://localhost:8080/deploy/${id}/return`,
+            {
+                method: "GET",
+            }
+        );
 
         let responseJson: {
             [hash: string]: String
@@ -55,7 +177,7 @@ return {
             }
         }
 
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 1000));
         
         if (Object.keys(codeCallbacks).length > 0) {
             await listenForReturn();
@@ -138,7 +260,7 @@ return {
             </div>
         </div>
     </div>
-    <Splitpanes theme="default-theme" class="grow flex">
+    <Splitpanes theme="default-theme" class="grow flex h-0">
         <Pane class="files-panel bg-slate-500 w-full h-100" size={20}>
             files-panel
         </Pane>
@@ -168,13 +290,12 @@ return {
                             </Tabs.Trigger>
                         </Tabs.List>
                             <Tabs.Content value="console"
-                                class="grow">
+                                class="grow h-0">
                                 <Console bind:consoleOutput />
                             </Tabs.Content>
-                            <Tabs.Content value="world-view">
-                                <div class="bg-blue-200">
-                                    World View
-                                </div>
+                            <Tabs.Content value="world-view"
+                                class="grow h-0">
+                                <WorldView {blocks} {turtlePos}/>
                             </Tabs.Content>
                     </Tabs.Root>
                 </Pane>
@@ -186,50 +307,3 @@ return {
         </Pane>
     </Splitpanes>
 </div>
-
-<style>
-
-    .default-theme.splitpanes__pane {
-  background-color: #f8f8f8;
-}
-
-.splitpanes.default-theme.splitpanes__splitter {
-  background-color: #ccc !important;
-  position: relative;
-}
-
-.default-theme.splitpanes__splitter:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  transition: opacity 0.4s;
-  background-color: rgba(255, 0, 0, 0.3);
-  opacity: 0;
-  z-index: 1;
-}
-
-.default-theme.splitpanes__splitter:hover:before {
-  opacity: 1;
-}
-
-.default-theme.splitpanes__splitter.splitpanes__splitter__active {
-  z-index: 2; /* Fix an issue of overlap fighting with a near hovered splitter */
-}
-
-.default-theme.splitpanes--vertical > .splitpanes__splitter:before {
-  left: -30px;
-  right: -30px;
-  height: 100%;
-  cursor: col-resize;
-}
-
-.default-theme.splitpanes--horizontal > .splitpanes__splitter:before {
-  top: -30px;
-  bottom: -30px;
-  width: 100%;
-  cursor: row-resize;
-}
-
-    
-</style>
