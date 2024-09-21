@@ -15,7 +15,7 @@ import { Separator } from "bits-ui";</script>
 		<!-- <Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[1px]"></Separator.Root> -->
 		<!-- <div>Whiteboard processor</div> -->
 	</nav>
-	<main class="h-0 flex-grow box-border">
+	<main class="box-border top-0 bottom-0 w-full h-full">
 		<slot />
 	</main>
 </div>
