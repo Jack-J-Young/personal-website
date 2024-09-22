@@ -217,7 +217,7 @@
             formData.append("quad_points", pointsStr);
         }
 
-        fetch("http://localhost:3046/start", {
+        fetch("https://api.jackyoung.xyz/whiteboard/start", {
             method: "POST",
             body: formData,
         })

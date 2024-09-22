@@ -26,7 +26,7 @@
 
         // POST localhost:3046/s/{id}/options with form data
 
-        fetch(`http://localhost:3046/s/${id}/options`, {
+        fetch(`https://api.jackyoung.xyz/whiteboard/s/${id}/options`, {
             method: 'POST',
             body: formData
         }).then(response => {
@@ -37,7 +37,7 @@
             // Reload preview (url is already preview url)
             let lastUrl = editorImage.src;
 
-            editorImage.src = `http://localhost:3046/s/${id}/preview?${Date.now()}`;
+            editorImage.src = `https://api.jackyoung.xyz/whiteboard/${id}/preview?${Date.now()}`;
 
             URL.revokeObjectURL(lastUrl);
             loading = false;
@@ -53,7 +53,7 @@
         preview = false;
         // POST localhost:3046/s/{id}/process
 
-        let response = await fetch(`http://localhost:3046/s/${id}/process`, {
+        let response = await fetch(`https://api.jackyoung.xyz/whiteboard/${id}/process`, {
             method: 'GET'
         });
 
@@ -183,7 +183,7 @@
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <div class="image-editor {editorCursor}" role="application" aria-label="Image editor" bind:this={editor} on:mousedown={startDrag} on:mouseup={stopDrag} on:mouseleave={cancelDrag}>
         <div class="editor-image-container">
-            <img bind:this={editorImage} draggable="false" id="input-file" src="http://localhost:3046/s/{id}/preview" alt="uploaded in editor" class="editor-image" bind:naturalWidth={imgW} bind:naturalHeight={imgH} on:load={centerCamera}/>
+            <img bind:this={editorImage} draggable="false" id="input-file" src="https://api.jackyoung.xyz/whiteboard/{id}/preview" alt="processor preview" class="editor-image" bind:naturalWidth={imgW} bind:naturalHeight={imgH} on:load={centerCamera}/>
         </div>
         {#if loading}
             <div class="loading-overlay">
@@ -225,7 +225,7 @@
             </div>
         </div>
     </div>
-    <!-- <img src="http://localhost:3046/s/{id}/preview" alt="before" class="w-1/2 h-full object-cover"> -->
+    <!-- <img src="https://api.jackyoung.xyz/whiteboard/{id}/preview" alt="before" class="w-1/2 h-full object-cover"> -->
 </div>
 
 <style>
