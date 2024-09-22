@@ -37,7 +37,7 @@
             // Reload preview (url is already preview url)
             let lastUrl = editorImage.src;
 
-            editorImage.src = `https://api.jackyoung.xyz/whiteboard/${id}/preview?${Date.now()}`;
+            editorImage.src = `https://api.jackyoung.xyz/whiteboard/s/${id}/preview?${Date.now()}`;
 
             URL.revokeObjectURL(lastUrl);
             loading = false;
@@ -53,7 +53,7 @@
         preview = false;
         // POST localhost:3046/s/{id}/process
 
-        let response = await fetch(`https://api.jackyoung.xyz/whiteboard/${id}/process`, {
+        let response = await fetch(`https://api.jackyoung.xyz/whiteboard/s/${id}/process`, {
             method: 'GET'
         });
 
@@ -183,7 +183,7 @@
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <div class="image-editor {editorCursor}" role="application" aria-label="Image editor" bind:this={editor} on:mousedown={startDrag} on:mouseup={stopDrag} on:mouseleave={cancelDrag}>
         <div class="editor-image-container">
-            <img bind:this={editorImage} draggable="false" id="input-file" src="https://api.jackyoung.xyz/whiteboard/{id}/preview" alt="processor preview" class="editor-image" bind:naturalWidth={imgW} bind:naturalHeight={imgH} on:load={centerCamera}/>
+            <img bind:this={editorImage} draggable="false" id="input-file" src="https://api.jackyoung.xyz/whiteboard/s/{id}/preview" alt="processor preview" class="editor-image" bind:naturalWidth={imgW} bind:naturalHeight={imgH} on:load={centerCamera}/>
         </div>
         {#if loading}
             <div class="loading-overlay">
