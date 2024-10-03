@@ -3,6 +3,7 @@
     import { goto } from "$app/navigation";
     import TransformPoint from "$lib/TransformPoint.svelte";
     import TransformRegion from "$lib/TransformRegion.svelte";
+    import { pan, pinch, type GestureCustomEvent, type PinchPointerEventDetail } from 'svelte-gestures';
 
     let imageRaw: File;
     let image = "";
@@ -108,38 +109,37 @@
     function moveY(amount: number) {
         camY += amount/zoom;
     }
-    
-    let buttonDown = -1;
-    function startDrag(event: MouseEvent) {
-        // check if not moving and the button is left click
-        if ((tool !== Tools.MOVE && event.button == 0) || event.button == 2 || dragging) return;
-        buttonDown = event.button;
+
+    let startPanX = 0;
+    let startPanY = 0;
+    let startPanDetailX = 0;
+    let startPanDetailY = 0;
+    function panDown(event: GestureCustomEvent) {
+        if (event.detail.event.pointerType === "mouse" && event.detail.event.button === 0) {
+            if (tool !== Tools.MOVE) return;
+        }
+
+        startPanX = camX;
+        startPanY = camY;
+        startPanDetailX = event.detail.x;
+        startPanDetailY = event.detail.y;
         dragging = true;
     }
 
-    function stopDrag(event: MouseEvent) {
+    function panUp(event: GestureCustomEvent) {
+        // if (tool !== Tools.MOVE) return;
         dragging = false;
     }
 
-    function cancelDrag() {
-        dragging = false;
+    function panMove(event: GestureCustomEvent) {
+        // if (tool !== Tools.MOVE || !dragging) return;
+        if (!dragging) return;
+        camX = startPanX + startPanDetailX/zoom - event.detail.x/zoom;
+        camY = startPanY + startPanDetailY/zoom - event.detail.y/zoom;
     }
 
     let editorMouseX = 0;
     let editorMouseY = 0;
-    function editorMouseMove(event: MouseEvent) {
-        if (!editor) return;
-        let editorRect = editor.getBoundingClientRect();
-
-        editorMouseX = (event.clientX - editorRect.left);
-        editorMouseY = (event.clientY - editorRect.top);
-
-        if (!dragging) return;
-
-        camX -= event.movementX / zoom;
-        camY -= event.movementY / zoom;
-    }
-
     function fancyZoom(delta: number) {
         camX += editorMouseX * (1 - delta) / zoom;
         camY += editorMouseY * (1 - delta) / zoom;
@@ -147,13 +147,59 @@
     }
 
     function handleZoom(event: WheelEvent) {
+        if (!editor) return;
+        let rect = editor.getBoundingClientRect();
+        
+        if (dragging) {
+            camX = startPanX + startPanDetailX/zoom - (event.x - rect.left)/zoom;
+            camY = startPanY + startPanDetailY/zoom - (event.y - rect.top)/zoom;
+            dragging = false;
+        }
+
         let delta = 1 + event.deltaY / 1000;
 
         if (zoom / delta < 0.1) {
             delta = zoom / 0.1;
         }
 
+        editorMouseX = event.x - rect.left;
+        editorMouseY = event.y - rect.top;
+
         fancyZoom(delta);
+    }
+
+    let lastPinch = -1;
+    function startPinch() {
+        lastPinch = -1;
+    }
+
+    function onPinch(event: CustomEvent<PinchPointerEventDetail>) {
+        if (dragging) {
+            camX = startPanX + startPanDetailX/zoom - event.detail.center.x/zoom;
+            camY = startPanY + startPanDetailY/zoom - event.detail.center.y/zoom;
+            dragging = false;
+        }
+        lastPinch = event.detail.scale;
+        editorMouseX = event.detail.center.x;
+        editorMouseY = event.detail.center.y;
+    }
+
+    function handlePinch(event: CustomEvent<PinchPointerEventDetail>) {
+        if (lastPinch == -1) {
+            onPinch(event);
+            return;
+        }
+        let delta = lastPinch / event.detail.scale;
+
+        // let delta = (event.detail.scale - 1) / 10000;
+
+        // if (zoom / delta < 0.1) {
+        //     delta = zoom / 0.1;
+        // }
+
+        fancyZoom(delta);
+
+        lastPinch = event.detail.scale;
     }
 
     function onZoomInput() {
@@ -239,12 +285,12 @@
     }
 </script>
 
-<svelte:window on:mousemove={editorMouseMove} on:wheel={handleZoom} />
+<svelte:window on:wheel={handleZoom} />
 
 <label class="flex flex-col w-full h-full" for="input-image" style="--camX: {camX}px; --camY: {camY}px; --zoom: {zoom};">
     <input disabled={image != ""} type="file" id="input-image" accept="image/*" on:change={handleFileChange} hidden style="user-select: none" />
-    <div class="flex {(loading || image == "") ? "disabled-tools" : ""}">
-        <div class="flex gap-4 items-start grow p-4">
+    <div class="flex {(loading || image == "") ? "disabled-tools" : ""} overflow-x-auto">
+        <div class="flex gap-4 items-start grow p-4 w-min">
             <button class="editor-button">Quit</button>
             <div class="w-max h-min">
                 <input type="text" bind:value={zoomPercent} on:change={onZoomInput}/>
@@ -274,7 +320,18 @@
         </div>
     {:else if image}
         <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <div class="image-editor {editorCursor}" role="application" aria-label="Image editor" bind:this={editor} on:mousedown={startDrag} on:mouseup={stopDrag} on:mouseleave={cancelDrag} >
+        <div class="image-editor {editorCursor}" role="application" aria-label="Image editor"
+            bind:this={editor}
+
+            use:pan
+            on:pandown={panDown}
+            on:panup={panUp}
+            on:panmove={panMove}
+
+            on:pinchdown={startPinch}
+            use:pinch
+            on:pinch={handlePinch}
+            >
             <div class="editor-image-container">
                 <img draggable="false" id="input-file" src="{image}" alt="uploaded in editor" class="editor-image" bind:naturalWidth={imgW} bind:naturalHeight={imgH} on:load={centerCamera}/>
                 <div class="image-overlay">

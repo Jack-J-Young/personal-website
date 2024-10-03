@@ -2,6 +2,7 @@
     import { page } from '$app/stores';
     import type { Page } from '@sveltejs/kit';
     import { Separator } from 'bits-ui';
+    import { pan, pinch, type GestureCustomEvent, type PinchPointerEventDetail } from 'svelte-gestures';
 
     // Get the `id` param from the route
     $: id = ($page.params as { id: string }).id;// id param from url
@@ -114,36 +115,34 @@
                 "transform-cursor":
                 "";
 
-    let buttonDown = -1;
-    function startDrag(event: MouseEvent) {
-        // check if not moving and the button is left click
-        if ((tool !== Tools.MOVE && event.button == 0) || event.button == 2 || dragging) return;
-        buttonDown = event.button;
+    let startPanX = 0;
+    let startPanY = 0;
+    let startPanDetailX = 0;
+    let startPanDetailY = 0;
+    function panDown(event: GestureCustomEvent) {
+        // if (tool !== Tools.MOVE) return;
+
+        startPanX = camX;
+        startPanY = camY;
+        startPanDetailX = event.detail.x;
+        startPanDetailY = event.detail.y;
         dragging = true;
     }
 
-    function stopDrag(event: MouseEvent) {
+    function panUp(event: GestureCustomEvent) {
+        // if (tool !== Tools.MOVE) return;
         dragging = false;
     }
 
-    function cancelDrag() {
-        dragging = false;
+    function panMove(event: GestureCustomEvent) {
+        // if (tool !== Tools.MOVE || !dragging) return;
+        if (!dragging) return;
+        camX = startPanX + startPanDetailX/zoom - event.detail.x/zoom;
+        camY = startPanY + startPanDetailY/zoom - event.detail.y/zoom;
     }
 
     let editorMouseX = 0;
     let editorMouseY = 0;
-    function editorMouseMove(event: MouseEvent) {
-        let editorRect = editor.getBoundingClientRect();
-
-        editorMouseX = (event.clientX - editorRect.left);
-        editorMouseY = (event.clientY - editorRect.top);
-
-        if (!dragging) return;
-
-        camX -= event.movementX / zoom;
-        camY -= event.movementY / zoom;
-    }
-
     function fancyZoom(delta: number) {
         camX += editorMouseX * (1 - delta) / zoom;
         camY += editorMouseY * (1 - delta) / zoom;
@@ -151,13 +150,59 @@
     }
 
     function handleZoom(event: WheelEvent) {
+        if (!editor) return;
+        let rect = editor.getBoundingClientRect();
+        
+        if (dragging) {
+            camX = startPanX + startPanDetailX/zoom - (event.x - rect.left)/zoom;
+            camY = startPanY + startPanDetailY/zoom - (event.y - rect.top)/zoom;
+            dragging = false;
+        }
+
         let delta = 1 + event.deltaY / 1000;
 
         if (zoom / delta < 0.1) {
             delta = zoom / 0.1;
         }
 
+        editorMouseX = event.x - rect.left;
+        editorMouseY = event.y - rect.top;
+
         fancyZoom(delta);
+    }
+
+    let lastPinch = -1;
+    function startPinch() {
+        lastPinch = -1;
+    }
+
+    function onPinch(event: CustomEvent<PinchPointerEventDetail>) {
+        if (dragging) {
+            camX = startPanX + startPanDetailX/zoom - event.detail.center.x/zoom;
+            camY = startPanY + startPanDetailY/zoom - event.detail.center.y/zoom;
+            dragging = false;
+        }
+        lastPinch = event.detail.scale;
+        editorMouseX = event.detail.center.x;
+        editorMouseY = event.detail.center.y;
+    }
+
+    function handlePinch(event: CustomEvent<PinchPointerEventDetail>) {
+        if (lastPinch == -1) {
+            onPinch(event);
+            return;
+        }
+        let delta = lastPinch / event.detail.scale;
+
+        // let delta = (event.detail.scale - 1) / 10000;
+
+        // if (zoom / delta < 0.1) {
+        //     delta = zoom / 0.1;
+        // }
+
+        fancyZoom(delta);
+
+        lastPinch = event.detail.scale;
     }
 
     function optionZoom(zoomPercent: string) {
@@ -178,10 +223,20 @@
     }
 </script>
 
-<svelte:window on:mousemove={editorMouseMove} on:wheel={handleZoom} />
+<svelte:window on:wheel={handleZoom} />
 <div class="w-full h-full flex justify-center items-center" style="--camX: {camX}px; --camY: {camY}px; --zoom: {zoom}">
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <div class="image-editor {editorCursor}" role="application" aria-label="Image editor" bind:this={editor} on:mousedown={startDrag} on:mouseup={stopDrag} on:mouseleave={cancelDrag}>
+    <div class="image-editor {editorCursor}" role="application" aria-label="Image editor"
+        bind:this={editor}
+        
+        use:pan
+        on:pandown={panDown}
+        on:panup={panUp}
+        on:panmove={panMove}
+
+        on:pinchdown={startPinch}
+        use:pinch
+        on:pinch={handlePinch}>
         <div class="editor-image-container">
             <img bind:this={editorImage} draggable="false" id="input-file" src="https://api.jackyoung.xyz/whiteboard/s/{id}/preview" alt="processor preview" class="editor-image" bind:naturalWidth={imgW} bind:naturalHeight={imgH} on:load={centerCamera}/>
         </div>
