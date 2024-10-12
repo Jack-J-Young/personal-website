@@ -1,0 +1,5 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- polygon from 0,0, 30,5, 30,25, 0,30 -->
+    <!-- transparent with 10px stroke -->
+    <polygon points="5,5 25,10 25,20 5,25" stroke-width="2px" stroke="#ADAFB2" />
+</svg>
