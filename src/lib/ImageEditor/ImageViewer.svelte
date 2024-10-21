@@ -10,6 +10,7 @@
     import TransformRegion from './TransformRegion.svelte';
     import { WhiteboardSession } from './WhiteboardSession';
     import SidePanel from './SidePanel.svelte';
+    import type { PinchPointerEventDetail } from 'svelte-gestures/src/pinch';
     
     let dispatch = createEventDispatcher();
 
@@ -115,6 +116,20 @@
         if (!_tool.pan) return;
         _tool.pan(event);
     }
+
+    function pinchOn(event: GestureCustomEvent) {
+        let _tool = get(tool);
+        if (!_tool) return;
+        if (!_tool.pinchOn) return;
+        _tool.pinchOn(event);
+    }
+
+    function zoom(event: CustomEvent<PinchPointerEventDetail>) {
+        let _tool = get(tool);
+        if (!_tool) return;
+        if (!_tool.zoom) return;
+        _tool.zoom(event);
+    }
 </script>
 
 <div class="w-full grow relative overflow-hidden min-w-0"
@@ -149,11 +164,11 @@
                 on:pandown={panOn}
                 on:panup={panOff}
                 on:panmove={panMove}
-                >
-                <!-- on:pinchdown={tool.pinchOn}
+                
                 use:pinch
-                on:pinch={tool.zoom}
-                > -->
+                on:pinchdown={pinchOn}
+                on:pinch={zoom}
+                >
 
                 <div class="editor-image-container">
                     <img draggable="false"
