@@ -1,5 +1,7 @@
+import 'svelte';
 import { get, writable, type Writable } from "svelte/store";
-import type { WhiteboardSession } from "./WhiteboardSession";
+import type { WhiteboardSession } from "../WhiteboardSession";
+import type { ComponentType, SvelteComponent } from "svelte";
 
 export enum ViewerState {
     Editing,
@@ -30,6 +32,8 @@ export interface ViewerProperties {
     state: ViewerState;
     setting: boolean;
     settings: ProcessorSettings;
+    alert: boolean;
+    alertBody: ComponentType | null;
 }
 
 export class ViewerPropertiesStore {

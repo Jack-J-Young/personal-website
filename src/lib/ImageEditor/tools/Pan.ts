@@ -1,4 +1,4 @@
-import { Tool } from "../Tool";
+import { Tool } from "./Tool";
 import pan_icon from "$lib/ImageEditor/icons/pan.svg";
 
 export class Pan extends Tool {

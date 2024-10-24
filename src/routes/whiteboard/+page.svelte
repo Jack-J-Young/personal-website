@@ -1,5 +1,5 @@
 <script lang="ts">
-    import BeforeAfterImageSlider from "$lib/BeforeAfterImageSlider.svelte";
+    import BeforeAfterImageSlider from "$lib/ImageEditor/components/BeforeAfterImageSlider.svelte";
     let innerWidth = 0
     let innerHeight = 0
 

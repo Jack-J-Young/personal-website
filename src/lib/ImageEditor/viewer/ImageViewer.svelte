@@ -1,16 +1,17 @@
 <script lang="ts">
     import { pan, pinch } from 'svelte-gestures';
-    import type { Tool } from "./Tool";
+    import type { Tool } from "../tools/Tool";
     import { ViewerPropertiesStore, ViewerState } from "./ViewerProperties";
     import type { GestureCustomEvent } from "svelte-gestures/src/shared";
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher, SvelteComponent } from 'svelte';
     import { centerCamera } from './CameraControls';
     import { get, type Writable } from 'svelte/store';
-    import TransformPoint from './TransformPoint.svelte';
-    import TransformRegion from './TransformRegion.svelte';
-    import { WhiteboardSession } from './WhiteboardSession';
-    import SidePanel from './SidePanel.svelte';
+    import TransformPoint from '../TransformPoint.svelte';
+    import TransformRegion from '../TransformRegion.svelte';
+    import { WhiteboardSession } from '../WhiteboardSession';
+    import SidePanel from '../components/SidePanel.svelte';
     import type { PinchPointerEventDetail } from 'svelte-gestures/src/pinch';
+
     
     let dispatch = createEventDispatcher();
 
@@ -37,6 +38,8 @@
             transparent: false,
             darkMode: false,
         },
+        alert: false,
+        alertBody: null,
     });
 
     $: vp = vps.ref();
@@ -149,6 +152,13 @@
         {#if $vp.loading}
             <div class="viewer-overlay">
                 <h1>Loading...</h1>
+            </div>
+        {/if}
+        {#if $vp.alert}
+            <div class="viewer-overlay">
+                {#if $vp.alertBody}
+                    <svelte:component this={$vp.alertBody} />
+                {/if}
             </div>
         {/if}
         <SidePanel closed={!$vp.setting} vps={vps} />

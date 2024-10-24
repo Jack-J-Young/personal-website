@@ -1,6 +1,7 @@
+import 'svelte';
 import type { GestureCustomEvent, PinchPointerEventDetail } from "svelte-gestures";
-import type { ViewerProperties, ViewerPropertiesStore } from "./ViewerProperties";
-import { fancyZoom } from "./CameraControls";
+import type { ViewerProperties, ViewerPropertiesStore } from "$lib/ImageEditor/viewer/ViewerProperties";
+import { fancyZoom } from "$lib/ImageEditor/viewer/CameraControls";
 import { writable, type Writable } from "svelte/store";
 
 export class Tool {

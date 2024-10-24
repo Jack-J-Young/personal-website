@@ -1,4 +1,4 @@
-import { Tool } from "../Tool";
+import { Tool } from "./Tool";
 import settings_icon from "$lib/ImageEditor/icons/settings.svg";
 import { get } from "svelte/store";
 
