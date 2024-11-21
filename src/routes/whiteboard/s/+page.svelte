@@ -1,10 +1,10 @@
 
 <script lang="ts">
-    import ImageViewer from "$lib/ImageEditor/ImageViewer.svelte";
-    import InfoBar from "$lib/ImageEditor/InfoBar.svelte";
-    import type { Tool } from "$lib/ImageEditor/Tool";
-    import ToolBar from "$lib/ImageEditor/ToolBar.svelte";
-    import { ViewerPropertiesStore } from "$lib/ImageEditor/ViewerProperties";
+    import ImageViewer from "$lib/ImageEditor/viewer/ImageViewer.svelte";
+    import InfoBar from "$lib/ImageEditor/components/InfoBar.svelte";
+    import type { Tool } from "$lib/ImageEditor/tools/Tool";
+    import ToolBar from "$lib/ImageEditor/viewer/ToolBar.svelte";
+    import { ViewerPropertiesStore } from "$lib/ImageEditor/viewer/ViewerProperties";
     import { get, writable, type Writable } from "svelte/store";
 
     // -- // Icons begin // -- //

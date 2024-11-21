@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Writable } from "svelte/store";
-    import { type Tool } from "./Tool";
+    import { type Tool } from "../tools/Tool";
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();

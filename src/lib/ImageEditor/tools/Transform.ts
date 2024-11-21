@@ -1,6 +1,7 @@
-import { Tool } from "../Tool";
+import { Tool } from "./Tool";
 import transform_icon from "$lib/ImageEditor/icons/transform.svg";
 import type { GestureCustomEvent } from "svelte-gestures";
+import type { ViewerProperties } from "../viewer/ViewerProperties";
 
 function calculateAngleFromReference(
     p: { x: number; y: number },
@@ -86,7 +87,7 @@ export class Transform extends Tool {
     onClick(event: MouseEvent): void {
         if (!this.vps) return;
 
-        let vp = this.vps.get();
+        let vp: ViewerProperties = this.vps.get();
         let transformPoints = vp.transformPoints;
 
         if (transformPoints.length < 4) {

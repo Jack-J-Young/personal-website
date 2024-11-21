@@ -1,15 +1,13 @@
 <script lang="ts">
     import { Separator } from "bits-ui";
-    import ToolIcon from "./ToolIcon.svelte";
-    import { type Tool } from "./Tool";
-    import { Pan } from "./tools/Pan";
+    import ToolIcon from "../components/ToolIcon.svelte";
+    import { type Tool } from "../tools/Tool";
+    import { Pan } from "../tools/Pan";
     import { get, writable, type Writable } from "svelte/store";
     import { ViewerState, type ViewerPropertiesStore } from "./ViewerProperties";
-    import { Transform } from "./tools/Transform";
-    import EditorButton from "./EditorButton.svelte";
+    import { Transform } from "../tools/Transform";
+    import EditorButton from "../components/EditorButton.svelte";
 
-    import upload_icon from "$lib/ImageEditor/icons/upload.svg";
-    import settings_icon from "$lib/ImageEditor/icons/settings.svg";
     // import pan from "$lib/ImageEditor/icons/pan.svg";
     // import transform from "$lib/ImageEditor/icons/transform.svg";
     import zoom_icon from "$lib/ImageEditor/icons/zoom.svg";
@@ -17,7 +15,8 @@
     import zoomIn_icon from "$lib/ImageEditor/icons/zoomIn.svg";
     import help_icon from "$lib/ImageEditor/icons/help.svg";
     import chev_icon from "$lib/ImageEditor/icons/chev-right.svg";
-    import { Settings } from "./tools/Settings";
+    import { Settings } from "../tools/Settings";
+    import { Upload } from "../tools/Upload";
 
     export let infoText: string = "";
     export let vps: ViewerPropertiesStore;
@@ -26,6 +25,7 @@
 
     let changesMade: boolean = false;
     
+    let uploadTool: Tool = new Upload();
     let settingsTool: Tool = new Settings();
     let panTool: Tool = new Pan();
     let transformTool: Tool = new Transform();
@@ -39,11 +39,7 @@
         // list of list of tools
         let newTools = [
             [
-                {
-                    icon: upload_icon,
-                    name: "Upload Image",
-                    hoverText: `Upload image from your device${changesMade ? " and undo changes" : ""}.`
-                },
+                uploadTool,
                 settingsTool,
             ],
             [

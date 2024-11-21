@@ -5,7 +5,7 @@
     //     // multipart form data
     //     // store result (text) in a variable
 
-import { ViewerState, type ViewerPropertiesStore } from "./ViewerProperties";
+import { ViewerState, type ViewerPropertiesStore } from "./viewer/ViewerProperties";
 
     //     let formData = new FormData();
 

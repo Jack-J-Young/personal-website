@@ -1,6 +1,7 @@
+import 'svelte';
 import type { GestureCustomEvent, PinchPointerEventDetail } from "svelte-gestures";
-import type { ViewerProperties, ViewerPropertiesStore } from "./ViewerProperties";
-import { fancyZoom } from "./CameraControls";
+import type { ViewerProperties, ViewerPropertiesStore } from "$lib/ImageEditor/viewer/ViewerProperties";
+import { fancyZoom } from "$lib/ImageEditor/viewer/CameraControls";
 import { writable, type Writable } from "svelte/store";
 
 export class Tool {
@@ -97,7 +98,7 @@ export class Tool {
             return;
         }
         if (event instanceof CustomEvent) {
-            // this.pinch(event);
+            this.pinch(event);
             return;
         }
     }
@@ -141,32 +142,49 @@ export class Tool {
         // fancyZoom(delta, this.vps);
     }
 
-    // pinchOn(event: GestureCustomEvent): void {
-    //     this.lastPinch = -1;
-    // }
+    pinchOn(event: GestureCustomEvent): void {
+        this.lastPinch = -1;
+    }
 
-    // private startPinch(event: CustomEvent<PinchPointerEventDetail>): void {
-    //     if (!this.vps) return;
-    //     if (this.isPanning) {
-    //         this.vps.store.camX = this.startX + this.startDetailX/this.vps.store.zoom - event.detail.center.x/this.vps.store.zoom;
-    //         this.vps.store.camY = this.startY + this.startDetailY/this.vps.store.zoom - event.detail.center.y/this.vps.store.zoom;
-    //         this.isPanning = false;
-    //     }
-    //     this.lastPinch = event.detail.scale;
-    //     this.vps.store.mouseX = event.detail.center.x;
-    //     this.vps.store.mouseY = event.detail.center.y;
-    // }
+    private startPinch(event: CustomEvent<PinchPointerEventDetail>): void {
+        if (!this.vps) return;
 
-    // pinch(event: CustomEvent<PinchPointerEventDetail>): void {
-    //     if (!this.vps) return;
-    //     if (this.lastPinch == -1) {
-    //         this.startPinch(event);
-    //         return;
-    //     }
-    //     let delta = this.lastPinch / event.detail.scale;
+        let vp = this.vps.get();
+        let changes: Partial<ViewerProperties> = {};
 
-    //     fancyZoom(delta, this.vps);
+        if (this.isPanning) {
+            changes.camX = this.startX
+             + this.startDetailX/vp.zoom
+             - event.detail.center.x/vp.zoom;
 
-    //     this.lastPinch = event.detail.scale;
-    // }
+            changes.camY = this.startY
+             + this.startDetailY/vp.zoom
+             - event.detail.center.y/vp.zoom;
+
+            this.isPanning = false;
+        }
+
+        this.lastPinch = event.detail.scale;
+
+        this.vps.set({
+            ...changes,
+            mouseX: event.detail.center.x,
+            mouseY: event.detail.center.y,
+        });
+    }
+
+    pinch(event: CustomEvent<PinchPointerEventDetail>): void {
+        if (!this.vps) return;
+        if (this.lastPinch == -1) {
+            this.startPinch(event);
+            return;
+        }
+        let delta = this.lastPinch / event.detail.scale;
+
+        this.vps.set({
+            ...fancyZoom(delta, this.vps)
+        });
+
+        this.lastPinch = event.detail.scale;
+    }
 }

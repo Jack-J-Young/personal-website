@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ViewerState, type ViewerPropertiesStore } from "./ViewerProperties";
+    import { ViewerState, type ViewerPropertiesStore } from "../viewer/ViewerProperties";
 
     export let vps: ViewerPropertiesStore;
     export let closed: boolean = false;
