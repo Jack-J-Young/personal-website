@@ -3,6 +3,7 @@
     import { page } from "$app/stores";
     import Footer from "$lib/ui/Footer.svelte";
     import Nav from "$lib/ui/Nav.svelte";
+    import ScrollToTop from "$lib/ui/ScrollToTop.svelte";
 
     // The editor is full-bleed and carries its own toolbar, including a home
     // button, so the site chrome would only duplicate it and steal height.
@@ -19,6 +20,7 @@
         <main class="flex-1">
             <slot />
         </main>
+        <ScrollToTop />
         <Footer />
     </div>
 {/if}

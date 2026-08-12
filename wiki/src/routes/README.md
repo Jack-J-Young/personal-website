@@ -14,8 +14,8 @@ these are client-rendered unless a route opts into prerendering.
 
 ## +layout.svelte
 
-The shared shell: [`Nav`](../lib/ui/README.md), `<main>`, [`Footer`](../lib/ui/README.md), in a
-min-height flex column.
+The shared shell: [`Nav`](../lib/ui/README.md), `<main>`, [`Footer`](../lib/ui/README.md), and
+[`ScrollToTop`](../lib/ui/README.md#scrolltotop), in a min-height flex column.
 
 **The chrome is hidden on `/whiteboard/s`.** The editor is full-bleed and carries its own toolbar
 with a home button in it, so the site nav would duplicate that and steal vertical space. The

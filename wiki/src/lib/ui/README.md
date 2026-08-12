@@ -79,6 +79,7 @@ why `--bg-translucent` and `--accent-subtle` exist rather than `bg-bg/85`.
 | `ThemeToggle` | Sun/moon toggle |
 | `Nav` | Site header |
 | `Footer` | Site footer |
+| `ScrollToTop` | Floating back-to-top button, shown once the page is scrolled |
 
 `Heading` splits `level` from `size` on purpose: a page can keep a correct heading outline
 without being forced into a type scale.
@@ -98,6 +99,36 @@ than duplicating a class string across components.
 `SocialLinks` sits a level above: it's the site's actual contact row, used by both the about page
 and the footer, so the set of links is defined once. Changing where you can be reached is a
 one-file edit.
+
+## ScrollToTop
+
+Rendered once in the layout, on every route except the editor. It appears as soon as the window
+is scrolled at all, sliding up from off screen while the button grows from nothing to a 3rem
+circle.
+
+Three things about it are less obvious than they look:
+
+- **It is sticky in flow, not fixed.** The outer `.dock` is a zero-height `position: sticky`
+  element sitting between `<main>` and the footer. While there is page left it floats at the
+  bottom of the viewport; once the footer scrolls in, the dock reaches its natural flow position
+  and comes to rest on the footer's top edge. That keeps the button off the footer with no scroll
+  maths and no observer. Being zero-height, it adds nothing to page layout.
+- **The button expands around a centre that never moves.** The `.cradle` inside the dock is a
+  fixed 3rem box that handles the slide and fade, so growing the button from `0` to `3rem` is
+  symmetric about a stationary point. That is what lets the icon stay put and be *revealed* by
+  the expansion rather than scaling with it.
+- **The icon is centred with absolute offsets, not grid or flex alignment.** `overflow: hidden`
+  makes the button a scroll container, and browsers clamp centred alignment to the start edge in
+  scroll containers so overflowing content stays reachable. With `place-items: center` the icon
+  drifts half its own width off centre while the button is small; `position: absolute` with
+  `top/left: 50%` and a `-50%` translate is immune to that clamping.
+
+> **`Footer` is coupled to this.** It carries `relative z-10 bg-bg` specifically so it paints
+> above the dock with an opaque background, letting the button slide out from *behind* the footer
+> rather than over it. Removing the background or the z-index breaks that effect.
+
+Hidden state is a class toggle rather than an `{#if}` so the transition can play in both
+directions; `tabindex` and `aria-hidden` keep it off the keyboard path while it's out of view.
 
 Forking a component for a genuinely different look is expected and fine. What isn't fine is
 overriding a component's styling from outside it — if the caller has to know the internals, the
