@@ -2,13 +2,6 @@
 
 See the [wiki index](../../README.md#issues) for the tag format.
 
-## Mobile detection is an aspect-ratio heuristic
-`known` `low` `src/routes/whiteboard/+page.svelte`
-
-`mobileSite` is `innerWidth < innerHeight * 1.3` — a shape test, not a width breakpoint. A
-landscape phone reads as desktop and a narrow desktop window reads as mobile. Intentional, but
-surprising next to the Tailwind `md:` breakpoints used elsewhere.
-
 ## Uploads are retained indefinitely
 `open` `high` `src/routes/whiteboard/+page.svelte`
 

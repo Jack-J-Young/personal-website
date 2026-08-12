@@ -1,35 +1,55 @@
-<script>
-	// No specific script logic required for this example
+<script lang="ts">
+    import ButtonLink from "$lib/ui/ButtonLink.svelte";
+    import Card from "$lib/ui/Card.svelte";
+    import Container from "$lib/ui/Container.svelte";
+    import Eyebrow from "$lib/ui/Eyebrow.svelte";
+    import Heading from "$lib/ui/Heading.svelte";
+    import Section from "$lib/ui/Section.svelte";
+    import Stack from "$lib/ui/Stack.svelte";
+    import Text from "$lib/ui/Text.svelte";
 </script>
 
 <svelte:head>
-	<title>Home</title>
-	<meta name="description" content="My personal website for my projects" />
+    <title>Jack Young</title>
+    <meta name="description" content="My personal website for my projects" />
 </svelte:head>
 
-<section class="flex flex-col md:flex-row max-w-5xl mx-auto my-8 p-4">
-	<div
-		class="md:w-1/2 flex flex-col justify-center items-center mb-8 md:mb-0"
-	>
-		<a href="/whiteboard">
-			<img
-				src="whiteboard_processor_example.png"
-				alt="Processed example."
-				class="scale-90"
-			/>
-		</a>
-	</div>
-	<div class="md:w-1/2 flex flex-col justify-around items">
-		<div>
-			<h1 class="text-white mx-auto font-arial text-3xl">
-				Whiteboard processor
-			</h1>
-			<p class="text-white text-center font-arial text-2xl">
-				A web app for processing pictures of whiteboards
-			</p>
-			<p class="text-white text-center font-arial text-2xl">
-				<a href="/whiteboard">Try it out</a>
-			</p>
-		</div>
-	</div>
-</section>
+<Container>
+    <Section space="loose">
+        <Stack gap="lg">
+            <Stack gap="sm">
+                <Heading level={1}>Jack Young</Heading>
+                <div class="max-w-xl">
+                    <Text size="lg" muted>
+                        Software developer and Maker
+                    </Text>
+                </div>
+            </Stack>
+        </Stack>
+    </Section>
+
+    <Section space="tight">
+        <Stack gap="md">
+            <Eyebrow>Projects</Eyebrow>
+
+            <a href="/whiteboard" class="block rounded-lg">
+                <Card padded={false} interactive>
+                    <div class="grid gap-0 sm:grid-cols-2">
+                        <img
+                            src="/whiteboard_processor_example.png"
+                            alt="A whiteboard beside its processed, cleaned-up version"
+                            class="h-full w-full object-cover" />
+                        <div class="flex flex-col justify-center gap-3 p-6 sm:p-8">
+                            <Heading level={2} size="md">Whiteboard processor</Heading>
+                            <Text muted>
+                                A web app for cleaning up photos of whiteboards and pages —
+                                straighten the perspective, drop the background, keep the ink.
+                            </Text>
+                            <span class="font-mono text-sm text-accent">Try it &rarr;</span>
+                        </div>
+                    </div>
+                </Card>
+            </a>
+        </Stack>
+    </Section>
+</Container>

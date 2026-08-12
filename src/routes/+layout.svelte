@@ -1,21 +1,24 @@
-<script>import "../app.css";
-import { Separator } from "bits-ui";</script>
+<script lang="ts">
+    import "../app.css";
+    import { page } from "$app/stores";
+    import Footer from "$lib/ui/Footer.svelte";
+    import Nav from "$lib/ui/Nav.svelte";
 
-<div class="flex flex-col h-screen">
-	<nav class="flex h-5 items-center space-x-4 text-sm p-10 back bg-navBar">
-		<div class="text-white">
-			<a href="/">
-				<img src="/favicon.png" alt="Home" class="w-32 h-32 p-4 transform scale-75">
-			</a>
-		</div>
-		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[1px]"></Separator.Root>
-		<div class="text-white"><a href="/about">About</a></div>
-		<Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[1px]"></Separator.Root>
-		<div class="text-white"><a href="/whiteboard">Whiteboard processor</a></div>
-		<!-- <Separator.Root orientation="vertical" class="my-4 shrink-0 bg-border data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[1px]"></Separator.Root> -->
-		<!-- <div>Whiteboard processor</div> -->
-	</nav>
-	<main class="box-border top-0 bottom-0 w-full h-full">
-		<slot />
-	</main>
-</div>
+    // The editor is full-bleed and carries its own toolbar, including a home
+    // button, so the site chrome would only duplicate it and steal height.
+    $: isEditor = $page.url.pathname.startsWith("/whiteboard/s");
+</script>
+
+{#if isEditor}
+    <main class="h-screen w-full">
+        <slot />
+    </main>
+{:else}
+    <div class="flex min-h-screen flex-col">
+        <Nav />
+        <main class="flex-1">
+            <slot />
+        </main>
+        <Footer />
+    </div>
+{/if}

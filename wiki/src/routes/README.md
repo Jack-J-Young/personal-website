@@ -6,7 +6,7 @@ these are client-rendered unless a route opts into prerendering.
 | Route | File | Notes |
 |---|---|---|
 | `/` | `+page.svelte` | Landing page. Links to the whiteboard processor. |
-| `/about` | `about/+page.svelte` | Bio and links. **The only prerendered route** — `about/+page.ts` sets `prerender = true` and `csr = dev`, so it ships as a static asset with no client JS in production. |
+| `/about` | `about/+page.svelte` | Bio and links. **The only prerendered route** — `about/+page.ts` sets `prerender = true`. It deliberately does *not* disable client-side rendering: the theme toggle in the nav needs JavaScript, and a `csr = dev` here would leave it inert in production while working fine in dev. |
 | `/whiteboard` | `whiteboard/+page.svelte` | Marketing page: before/after slider, changelog, privacy copy. |
 | `/whiteboard/s` | `whiteboard/s/+page.svelte` | The editor. See [ImageEditor](../lib/ImageEditor/README.md). |
 
@@ -14,8 +14,12 @@ these are client-rendered unless a route opts into prerendering.
 
 ## +layout.svelte
 
-The shared nav shell — logo, About, Whiteboard processor, separated by `bits-ui` `Separator`s.
-Wraps everything in a full-height flex column with `<slot />` in a `<main>`.
+The shared shell: [`Nav`](../lib/ui/README.md), `<main>`, [`Footer`](../lib/ui/README.md), in a
+min-height flex column.
+
+**The chrome is hidden on `/whiteboard/s`.** The editor is full-bleed and carries its own toolbar
+with a home button in it, so the site nav would duplicate that and steal vertical space. The
+layout branches on the pathname and renders a bare full-height `<main>` for that route.
 
 ## The editor page
 
@@ -33,10 +37,11 @@ stylesheet.
 
 ## Responsive behaviour
 
-`/whiteboard` switches layout on `innerWidth < innerHeight * 1.3` — an aspect-ratio test rather
-than a width breakpoint. Everything else uses Tailwind's `md:` prefix normally.
+All pages use Tailwind breakpoints (`sm:`, `md:`, `lg:`). Nothing measures the viewport in
+JavaScript.
 
 ## Global styles
 
-`src/app.css` holds the CSS custom properties and base element styles; `src/app.html` carries the
-Open Graph meta tags. Neither is route-specific, but both affect every route.
+`src/app.css` holds the [design tokens](../lib/ui/README.md#tokens) and a minimal base — no
+element styling, since that belongs to the components. `src/app.html` carries the Open Graph
+meta tags and the blocking theme script that prevents a flash of the wrong theme on load.

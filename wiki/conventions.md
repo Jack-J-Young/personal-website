@@ -10,25 +10,43 @@ older ones (`TransformPoint`, `+layout`) are still plain JS.
 
 ## Styling
 
-Styling is split by area, and the split is deliberate:
+**Use the [design system](src/lib/ui/README.md).** Colour, type, spacing and radius decisions
+live in `src/lib/ui/` and in the tokens in `src/app.css`. Pages compose those components; they
+don't restate styles.
 
-- **Marketing and layout pages** (`/`, `/about`, `/whiteboard`, `+layout.svelte`) use **Tailwind**
-  utility classes. Custom colors: `navBar` (`#36364a`), `background` (`#484956`).
-- **The editor chrome** (`/whiteboard/s` and everything under `src/lib/ImageEditor/`) uses
-  **scoped `<style>` blocks with hard-coded hex**. Match this when adding editor UI rather than
-  reaching for Tailwind:
+Concretely:
 
-  | | |
-  |---|---|
-  | `#2A2B2D` | toolbar |
-  | `#232326` | panels, info bar |
-  | `#ADAFB2` | muted text, borders |
-  | `#5E5E5E` | dividers |
-  | `#7979FF` | primary button |
-  | `#262629` | canvas backdrop |
+- **No global element styling.** `app.css` has no rules for `a`, `h1`, `p` and shouldn't gain
+  any — that's `Link`, `Heading` and `Text`'s job. Global CSS is limited to tokens, the body
+  background, and the focus ring.
+- **No raw colours in pages or components.** Use a token (`bg-surface`, `text-text-muted`,
+  `var(--accent)`). If you need a colour that doesn't exist, add a token for it in all four
+  theme blocks rather than inlining a hex.
+- **Need a different look?** Add a variant if it's the same element reskinned, or fork the
+  component if it isn't. Don't override a component's styles from the outside.
 
-`tailwind.config.ts` sets `darkMode: 'media'` but no `dark:` variants are used — the app is
-dark-themed unconditionally.
+Two traps documented in full [in the ui README](src/lib/ui/README.md#two-rules-that-are-easy-to-get-wrong):
+Tailwind `dark:` variants don't work here (there's no `data-theme` attribute when following the
+OS), and Tailwind 3 silently drops opacity modifiers like `/50` on `var()` colours.
+
+### The editor is the exception
+
+Everything under `src/lib/ImageEditor/` predates the design system and keeps **scoped `<style>`
+blocks with hard-coded hex**. Match that when working on editor UI rather than mixing the two
+systems:
+
+| | |
+|---|---|
+| `#2A2B2D` | toolbar |
+| `#232326` | panels, info bar |
+| `#ADAFB2` | muted text, borders |
+| `#5E5E5E` | dividers |
+| `#7979FF` | primary button |
+| `#262629` | canvas backdrop |
+
+The site's dark accent is derived from that `#7979FF` so the two halves don't clash. Migrating
+the editor onto tokens would be a worthwhile change, but it's a project, not a side effect of
+another change.
 
 ## Static assets
 

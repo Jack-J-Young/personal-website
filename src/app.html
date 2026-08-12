@@ -4,6 +4,16 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script>
+			// Runs before first paint so an explicitly chosen theme doesn't flash
+			// the OS one. With no stored choice the CSS media query decides.
+			try {
+				var stored = localStorage.getItem('theme');
+				if (stored === 'light' || stored === 'dark') {
+					document.documentElement.setAttribute('data-theme', stored);
+				}
+			} catch (e) {}
+		</script>
 		%sveltekit.head%
 		<meta property="og:title" content="Jack Young - Portfolio & Projects" />
 		<meta property="og:description" content="A website for my personal work and projects" />

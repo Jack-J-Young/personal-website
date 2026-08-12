@@ -6,8 +6,7 @@ node_modules
 /.svelte-kit
 /build
 
-# Developer-specific agent context. Project-wide facts belong in wiki/.
-# Bootstrap a new clone with: cp CLAUDE.example.md CLAUDE.md
+# Developer-specific agent context. Project-wide facts belong in wiki
 CLAUDE.md
 
 # OS

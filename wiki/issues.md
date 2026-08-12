@@ -20,19 +20,6 @@ Listed under `dependencies` and never imported. Left in place so far to avoid ch
 lockfile; remove it with `npm uninstall svelte-splitpanes` next time the lockfile is being
 touched anyway.
 
-## darkMode is configured but unused
-`known` `low` `tailwind.config.ts`
-
-`darkMode: 'media'` is set, but there is not a single `dark:` variant in the codebase — the app
-is dark-themed unconditionally. Harmless, but it implies a light theme exists.
-
-## Commented-out colour variables in app.css
-`open` `low` `src/app.css`
-
-`--color-bg-0`, `--color-bg-1` and `--color-bg-2` are all set to the same value, with the
-original distinct values commented out above them. Either the three-tier background is coming
-back or it isn't; per [conventions](conventions.md#comments), the dead values should go.
-
 ## Template assets are still in the repo
 `open` `low` `src/lib/images`
 

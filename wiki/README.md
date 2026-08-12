@@ -17,6 +17,7 @@ the contract.
 - **Code** (mirrors the source tree)
   - [src/routes/](src/routes/README.md) — pages and routing
   - [src/lib/](src/lib/README.md) — shared components
+    - [src/lib/ui/](src/lib/ui/README.md) — design system: tokens, theming, primitives
     - [src/lib/ImageEditor/](src/lib/ImageEditor/README.md) — the editor subsystem
 
 ## Stack
