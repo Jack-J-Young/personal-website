@@ -18,7 +18,7 @@
 	>
 		<img
 			src={profilePicture}
-			alt="Profile Picture"
+			alt="Jack Young"
 			class="w-48 h-48 rounded-full mb-6"
 		/>
 		<div class="flex justify-center">

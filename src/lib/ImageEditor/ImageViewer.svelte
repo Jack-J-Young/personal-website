@@ -29,6 +29,7 @@
         preview: false,
         imageRaw: null,
         image: null,
+        imageBlob: null,
         sessionApi: new WhiteboardSession(),
         state: ViewerState.Editing,
         setting: false,
@@ -79,15 +80,6 @@
             dispatch('firstLoad', true);
     }
     
-    // $: zoomPercent = `${Math.round(vp.zoom * 100)}`;
-    // $: editorCursor = "none"; // TODO: implement cursor logic with new tool interfaces
-        // "grabbing-cursor":
-        // tool === Tools.MOVE ?
-        //     "move-cursor":
-        //     tool === Tools.TRANSFORM ?
-        //         "transform-cursor":
-        //         "";
-
     function onClick(event: MouseEvent) {
         let _tool = get(tool);
         if (!_tool) return;
@@ -139,7 +131,7 @@
         <SidePanel closed={!$vp.setting} vps={vps} />
         {#if $vp.image}
             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-            <div class="image-editor cursor-here"
+            <div class="image-editor"
                 role="application"
                 aria-label="Image editor"
                 
@@ -218,11 +210,6 @@
         color: white;
     }
 
-    .disabled-tools {
-        pointer-events: none;
-        opacity: 0.5;
-    }
-
     .up {
         width: 40%;
         height: 40%;
@@ -242,24 +229,6 @@
         border-radius: 3rem;
     }
 
-    .editor-button {
-        background-color: white;
-        color: black;
-        border-radius: 0.5rem;
-        padding: 0.5rem;
-    }
-
-    .editor-button:disabled {
-        background: blue;
-    }
-
-    .editor-button {
-        flex-grow: 1;
-        background-color: white;
-        border-radius: 0.5rem;
-        padding: 0.5rem;
-    }
-
     .image-editor {
         user-select: none;
         width: 100%;
@@ -271,18 +240,6 @@
         background-color: #262629;
 
         /* click through */
-    }
-
-    .image-editor.move-cursor {
-        cursor: grab;
-    }
-
-    .image-editor.grabbing-cursor {
-        cursor: grabbing;
-    }
-
-    .image-editor.transform-cursor > .editor-image-container {
-        cursor: crosshair
     }
 
     .editor-image-container {

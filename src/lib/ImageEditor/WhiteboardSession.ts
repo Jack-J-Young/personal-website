@@ -1,11 +1,10 @@
+import type { ProcessorSettings } from "./ViewerProperties";
 
     // function startProcess() {
     //     loading = true;
     //     // api call to POST localhost:3046/start
     //     // multipart form data
     //     // store result (text) in a variable
-
-import { ViewerState, type ViewerPropertiesStore } from "./ViewerProperties";
 
     //     let formData = new FormData();
 
@@ -84,11 +83,10 @@ export class WhiteboardSession {
         });
     }
 
-    async setOptions(options: {key: string, value: string}[]): Promise<void> {
+    async setOptions(settings: ProcessorSettings): Promise<void> {
         let formData = new FormData();
-        for (let option of options) {
-            formData.append(option.key, option.value);
-        }
+        formData.append("transparent", String(settings.transparent));
+        formData.append("dark_mode", String(settings.darkMode));
 
         await fetch(`${this.url}/s/${this.sessionId}/options`, {
             method: "POST",
@@ -105,11 +103,9 @@ export class WhiteboardSession {
         });
     }
 
-    async process(): Promise<string> {
+    async process(): Promise<Blob> {
         let response = await fetch(`${this.url}/s/${this.sessionId}/process`)
-        
-        // response is an image, save it to the store
-        let image = await response.blob();
-        return URL.createObjectURL(image);
+
+        return response.blob();
     }
 }

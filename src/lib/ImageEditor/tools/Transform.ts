@@ -6,14 +6,41 @@ function calculateAngleFromReference(
     p: { x: number; y: number },
     cx: number,
     cy: number): number {
-    // Calculate angle from reference point (cx, cy) to point p
     return Math.atan2(p.y - cy, p.x - cx);
 }
 
+// Squared distance is enough to rank candidates, so no square root is needed.
+function indexOfNearestPoint(
+    points: { x: number, y: number }[],
+    target: { x: number, y: number }): number {
+    let squaredDistanceTo = (point: { x: number, y: number }) =>
+        (point.x - target.x) ** 2 + (point.y - target.y) ** 2;
+
+    let best = 0;
+    for (let i = 1; i < points.length; i++) {
+        if (squaredDistanceTo(points[i]) < squaredDistanceTo(points[best])) best = i;
+    }
+    return best;
+}
+
+function indexOfTopLeftPoint(points: { x: number, y: number }[]): number {
+    let best = 0;
+    for (let i = 1; i < points.length; i++) {
+        if (points[i].x + points[i].y < points[best].x + points[best].y) best = i;
+    }
+    return best;
+}
+
+function rotateToStartAt<T>(items: T[], startIndex: number): T[] {
+    return [...items.slice(startIndex), ...items.slice(0, startIndex)];
+}
+
+// The starting corner matters, not just the winding: TransformRegion renders
+// assuming [top-left, top-right, bottom-right, bottom-left], and this order is
+// what the API receives as quad_points.
 function sortQuadPointsClockwiseFromTopLeft(
     quadPoints: { x: number, y: number }[]):
         { x: number, y: number }[] {
-    // Find centroid as reference point
     let cx = 0,
         cy = 0;
     for (let point of quadPoints) {
@@ -23,7 +50,6 @@ function sortQuadPointsClockwiseFromTopLeft(
     cx /= quadPoints.length;
     cy /= quadPoints.length;
 
-    // Calculate angles from centroid to each point
     let angles: { point: { x: number, y: number }; angle: number }[] =
         quadPoints.map(
             (point) => {
@@ -32,13 +58,11 @@ function sortQuadPointsClockwiseFromTopLeft(
             },
         );
 
-    // Sort points based on angle from reference point (centroid)
     angles.sort((a, b) => a.angle - b.angle);
 
-    // Extract sorted points
-    let sortedQuadPoints = angles.map((item) => item.point);
+    let clockwise = angles.map((item) => item.point);
 
-    return sortedQuadPoints;
+    return rotateToStartAt(clockwise, indexOfTopLeftPoint(clockwise));
 }
 
 export class Transform extends Tool {
@@ -53,10 +77,8 @@ export class Transform extends Tool {
 
     panOn(event: GestureCustomEvent): void {
         if (!this.vps) return;
-        console.log(event);
 
         if (!event.detail.event) return;
-        console.log(event.detail.event);
         let pointerEvent = event.detail.event;
 
         if (pointerEvent.buttons == 1 && event.detail.event.pointerType == "mouse") return;
@@ -89,33 +111,14 @@ export class Transform extends Tool {
         let vp = this.vps.get();
         let transformPoints = vp.transformPoints;
 
+        let click = { x: event.offsetX, y: event.offsetY };
+
         if (transformPoints.length < 4) {
-            transformPoints = [
-                ...transformPoints,
-                {x: event.offsetX, y: event.offsetY}
-            ]
+            transformPoints = [...transformPoints, click];
         } else {
-            // find nearest point and set it
-            let nearest = transformPoints.reduce((prev, curr) => {
-                let prevDiff = {
-                    x: prev.x - event.offsetX,
-                    y: prev.y - event.offsetY
-                };
-                let currDiff = {
-                    x: curr.x - event.offsetX,
-                    y: curr.y - event.offsetY
-                };
-
-                let prevDist = Math.sqrt(prevDiff.x ** 2 + prevDiff.y ** 2);
-                let currDist = Math.sqrt(currDiff.x ** 2 + currDiff.y ** 2);
-
-                return prevDist < currDist ? prev : curr;
-            });
-
-            nearest.x = event.offsetX;
-            nearest.y = event.offsetY;
-
-            transformPoints = [...transformPoints];
+            let nearest = indexOfNearestPoint(transformPoints, click);
+            transformPoints = transformPoints.map(
+                (point, i) => i === nearest ? click : point);
         }
 
         if (transformPoints.length == 4) {

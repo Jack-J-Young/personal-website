@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { Writable } from "svelte/store";
     import { type Tool } from "./Tool";
     import { createEventDispatcher } from "svelte";
 
@@ -8,8 +7,6 @@
     export let tool: Tool;
 
     $: isSelected = tool.selected
-
-    export let selectedTool: Writable<Tool>;
 
     function handleClick() {
         dispatch("selectTool", tool);

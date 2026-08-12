@@ -26,6 +26,7 @@ export interface ViewerProperties {
     transformPoints: {x: number, y: number}[];
     imageRaw: File | null;
     image: string | null;
+    imageBlob: Blob | null;
     sessionApi: WhiteboardSession | null;
     state: ViewerState;
     setting: boolean;

@@ -94,8 +94,6 @@
         tools.set(newTools);
 
         tool.set(panTool);
-
-        console.log("loaded tools");
     }
 
     // panTool.vps = vps;
@@ -147,18 +145,13 @@
         let vp = vps.get();
 
         vp.sessionApi?.startSession(vp.imageRaw!, vp.transformPoints).then(() => {
-            // Set options
-            vp.sessionApi?.setOptions([
-                { key: "transparent", value: (vp.settings.transparent ? "true" : "false") },
-                { key: "dark_mode", value: (vp.settings.darkMode ? "true" : "false") },
-            ]).then(() => {
+            vp.sessionApi?.setOptions(vp.settings).then(() => {
                 vps.set({
                     preview: true,
                     image: vp.sessionApi?.getPreviewUrl(),
                     state: ViewerState.Preview,
                 });
             });
-            
         });
 
         let _tools = get(tools);
@@ -175,18 +168,30 @@
         });
         let vp = vps.get();
 
-        vp.sessionApi?.process().then((processedUrl) => {
+        vp.sessionApi?.process().then((blob) => {
             vps.set({
-                image: processedUrl,
+                imageBlob: blob,
+                image: URL.createObjectURL(blob),
                 state: ViewerState.Processed,
             });
         });
     }
 
-    function copyToClipboard() {
-        let vp = vps.get();
-        if (vp.image) {
-            navigator.clipboard.writeText(vp.image);
+    async function copyToClipboard() {
+        let blob = vps.get().imageBlob;
+
+        // Browsers only reliably accept PNG on the clipboard, and write() rejects
+        // outside a secure context. Downloading is the honest fallback either way.
+        if (!blob || blob.type !== "image/png") {
+            downloadImage();
+            return;
+        }
+
+        try {
+            await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+            infoText = "Copied image to clipboard.";
+        } catch {
+            downloadImage();
         }
     }
 
@@ -217,7 +222,7 @@
         </div>
         {#if $tools.length > 0}
             {#each $tools[0] as _tool}
-                <ToolIcon bind:tool={_tool} bind:selectedTool={tool} on:selectTool={selectTool} on:hoverTool={updateHoverTool} />
+                <ToolIcon bind:tool={_tool} on:selectTool={selectTool} on:hoverTool={updateHoverTool} />
             {/each}
         {/if}
         {#if $tools.length > 1}
@@ -228,7 +233,7 @@
                     width: 2px;
                     border-radius: 2px;" />
                 {#each toolGroup as _tool}
-                    <ToolIcon bind:tool={_tool} bind:selectedTool={tool} on:selectTool={selectTool} on:hoverTool={updateHoverTool} />
+                    <ToolIcon bind:tool={_tool} on:selectTool={selectTool} on:hoverTool={updateHoverTool} />
                 {/each}
             {/each}
         {/if}

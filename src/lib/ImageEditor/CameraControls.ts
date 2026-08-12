@@ -23,8 +23,8 @@ export function centerCamera(vps: ViewerPropertiesStore) {
 export function fancyZoom(delta: number, vps: ViewerPropertiesStore, changes: Partial<ViewerProperties> = {}): Partial<ViewerProperties> {
     let vp = vps.get();
 
-    if (!changes.camX) changes.camX = vp.camX;
-    if (!changes.camY) changes.camY = vp.camY;
+    if (changes.camX === undefined) changes.camX = vp.camX;
+    if (changes.camY === undefined) changes.camY = vp.camY;
 
     changes.camX -= vp.mouseX * (1 - delta) / vp.zoom;
     changes.camY += vp.mouseY * (1 - delta) / vp.zoom;
