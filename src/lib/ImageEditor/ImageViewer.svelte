@@ -8,7 +8,7 @@
     import { get, type Writable } from 'svelte/store';
     import TransformPoint from './TransformPoint.svelte';
     import TransformRegion from './TransformRegion.svelte';
-    import { WhiteboardSession } from './WhiteboardSession';
+    import { LocalWhiteboardSession } from './LocalWhiteboardSession';
     import SidePanel from './SidePanel.svelte';
     
     let dispatch = createEventDispatcher();
@@ -30,7 +30,7 @@
         imageRaw: null,
         image: null,
         imageBlob: null,
-        sessionApi: new WhiteboardSession(),
+        sessionApi: new LocalWhiteboardSession(),
         state: ViewerState.Editing,
         setting: false,
         settings: {

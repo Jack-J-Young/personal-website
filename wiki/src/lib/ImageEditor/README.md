@@ -6,7 +6,10 @@ the non-obvious part of the codebase: interaction is built from **tool classes**
 
 - [Tool.ts](Tool.ts.md) — the tool base class
 - [ViewerProperties.ts](ViewerProperties.ts.md) — the store all editor state lives in
-- [WhiteboardSession.ts](WhiteboardSession.ts.md) — the backend API client
+- [WhiteboardSession.ts](WhiteboardSession.ts.md) — the (now unused) backend API client
+- `ProcessorSession.ts` — the interface the editor processes images through
+- `LocalWhiteboardSession.ts` — the in-browser implementation, wrapping
+  [src/lib/whiteboard/](../whiteboard/README.md)
 - [tools/](tools/README.md) — the concrete tools
 - [Issues](issues.md)
 
@@ -54,14 +57,34 @@ Editing  --[Preview]-->  Preview  --[Process]-->  Processed
 ```
 
 - **Editing** — local file only; the user may place 4 transform points.
-- **Preview** — `startSession()` uploads to the backend, options are pushed, and the displayed
-  image is swapped for the server's low-res preview URL. `ToolBar.startPreview()` also **removes
-  the Transform tool from the toolbar**, since the quad is now baked in server-side.
-- **Processed** — the full-resolution blob from `/process`, kept in the store as both a `Blob`
-  (for the clipboard) and an object URL (for display and download).
+- **Preview** — `startSession()` decodes and rectifies the image, options are pushed, and the
+  displayed image is swapped for a low-resolution preview. `ToolBar.startPreview()` also
+  **removes the Transform tool from the toolbar**, since the quad is baked into the stored image
+  and cannot be adjusted afterwards.
+- **Processed** — the full-resolution result, kept in the store as both a `Blob` (for the
+  clipboard) and an object URL (for display and download).
 
-While in Preview, toggling a checkbox in `SidePanel` re-POSTs the options and re-requests the
-preview with a `?<timestamp>` cache-buster, since the preview URL is fixed per session.
+While in Preview, toggling a checkbox in `SidePanel` pushes the options and re-reads the preview
+URL. Each refresh yields a distinct URL, so the `<img>` reloads on its own.
+
+### Who does the processing
+
+The editor talks to a [`ProcessorSession`](../whiteboard/README.md) and never learns which
+implementation it holds. Two exist:
+
+| | |
+|---|---|
+| `LocalWhiteboardSession` | **In use.** Runs [the pipeline](../whiteboard/README.md) in the browser. No network, no server state, and the photo never leaves the machine. |
+| `WhiteboardSession` | The hosted API at `api.jackyoung.xyz`. Retained as a fallback and as the record of the API contract; nothing constructs it. |
+
+Swapping them is one line in `ImageViewer.svelte`, which is the reason the interface exists.
+
+`LocalWhiteboardSession` owns the browser-facing parts the pure pipeline deliberately avoids:
+decoding the `File` (applying EXIF rotation, and compositing onto white so a transparent PNG
+arrives flat), encoding results back to PNG, and minting object URLs. It also yields to the
+browser before each long synchronous pass so the loading state can paint — **racing the frame
+callback against a timer**, because frame callbacks never fire in a background tab and waiting on
+one alone would hang processing until the user returned to it.
 
 ## Gotchas
 

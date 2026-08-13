@@ -6,6 +6,8 @@ Shared code, reachable via the `$lib` alias.
   built from.
 - [ImageEditor/](ImageEditor/README.md) — the whiteboard editor subsystem, which is nearly all of
   the interesting code in this repo.
+- [whiteboard/](whiteboard/README.md) — the image processing pipeline itself, ported from the
+  hosted API and now running in the browser. Pure functions, no DOM.
 
 ## theme.ts
 

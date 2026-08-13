@@ -1,7 +1,11 @@
 # WhiteboardSession.ts
 
-The **only** client of the whiteboard backend. Every network call the app makes goes through
-this class, so it is the one place the API contract is encoded.
+The client of the whiteboard backend, and the one place its API contract is encoded.
+
+> **No longer in use.** The editor processes images locally through
+> [`LocalWhiteboardSession`](README.md#who-does-the-processing); nothing constructs this class.
+> It implements the same [`ProcessorSession`](README.md) interface, so it is one line away from
+> being swapped back in, but it is untested from here on — see [issues](issues.md).
 
 Base URL `https://api.jackyoung.xyz/whiteboard`, hard-coded. No auth.
 
@@ -34,8 +38,10 @@ drift apart.
 URLs, and returning the blob is what makes writing a real image to the clipboard possible.
 `ToolBar` creates the object URL and stores both.
 
-**`getPreviewUrl()` is fixed per session**, so re-fetching after an options change needs a
-cache-busting query string. `SidePanel.refreshPreview` appends one.
+**`getPreviewUrl()` appends its own cache-buster.** The path is fixed for the life of a session,
+so a re-fetch after an options change would otherwise be served from cache. This used to be
+`SidePanel`'s job, which broke as soon as a second implementation returned object URLs — a `?`
+suffix makes those invalid. Staleness is the session's problem, not the caller's.
 
 **`sessionId` is held in memory only.** There is no route param and no storage, so a page refresh
 loses the session — see [issues](issues.md).

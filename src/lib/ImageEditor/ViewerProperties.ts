@@ -1,5 +1,5 @@
 import { get, writable, type Writable } from "svelte/store";
-import type { WhiteboardSession } from "./WhiteboardSession";
+import type { ProcessorSession } from "./ProcessorSession";
 
 export enum ViewerState {
     Editing,
@@ -27,7 +27,7 @@ export interface ViewerProperties {
     imageRaw: File | null;
     image: string | null;
     imageBlob: Blob | null;
-    sessionApi: WhiteboardSession | null;
+    sessionApi: ProcessorSession | null;
     state: ViewerState;
     setting: boolean;
     settings: ProcessorSettings;

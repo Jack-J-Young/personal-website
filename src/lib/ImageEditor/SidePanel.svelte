@@ -19,9 +19,10 @@
         vps.set({ loading: true });
 
         vps.get().sessionApi?.setOptions(settings).then(() => {
-            // The preview URL is fixed per session, so it needs busting to re-fetch.
+            // Each refresh yields a distinct URL, so the <img> reloads and clears `loading`
+            // itself; the old fixed remote URL had to be cache-busted here instead.
             vps.set({
-                image: vps.get().sessionApi?.getPreviewUrl() + `?${Date.now()}`,
+                image: vps.get().sessionApi?.getPreviewUrl(),
             });
         });
     }

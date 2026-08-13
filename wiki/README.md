@@ -4,9 +4,10 @@ Documentation for [jackyoung.xyz](https://jackyoung.xyz) — a personal site who
 feature is the **Whiteboard processor**: upload a photo of a whiteboard or page, optionally mark
 4 corners for a perspective transform, tweak processing options, and download a cleaned image.
 
-All image processing happens on a **separate backend** (`api.jackyoung.xyz`, its own repo) — this
-app is the client. See [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md) for
-the contract.
+**Image processing runs entirely in the browser**, in
+[src/lib/whiteboard/](src/lib/whiteboard/README.md) — nothing is uploaded and there is no backend
+to host. It was previously a hosted API at `api.jackyoung.xyz`, whose contract is still recorded
+in [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md).
 
 ## Contents
 
@@ -19,6 +20,7 @@ the contract.
   - [src/lib/](src/lib/README.md) — shared components
     - [src/lib/ui/](src/lib/ui/README.md) — design system: tokens, theming, primitives
     - [src/lib/ImageEditor/](src/lib/ImageEditor/README.md) — the editor subsystem
+    - [src/lib/whiteboard/](src/lib/whiteboard/README.md) — the image processing pipeline
 
 ## Stack
 
@@ -35,11 +37,16 @@ npm run dev       # vite dev server
 npm run build     # static build into build/
 npm run preview   # serve the build
 npm run check     # svelte-kit sync && svelte-check
+npm test          # vitest run
 ```
 
-**There are no tests and no linter.** `npm run check` is the only automated gate, and it
-currently reports **0 errors, 0 warnings** — keep it there. Any new output is a regression
-introduced by the change in front of you.
+**`npm run check` and `npm test` are the two automated gates**, and both are currently clean —
+0 errors, 0 warnings and a passing suite. Any new output is a regression introduced by the change
+in front of you. There is no linter.
+
+Tests cover [src/lib/whiteboard/](src/lib/whiteboard/README.md) only, since it is the one part of
+the codebase that is pure computation with checkable answers. They sit next to the code as
+`*.test.ts`. UI components are not tested.
 
 ## How this wiki is organised
 

@@ -62,13 +62,33 @@ options.
 
 Per [conventions](../../../conventions.md#comments), commented-out code shouldn't be committed.
 
-## Sessions don't survive a page refresh
-`known` `medium` `src/lib/ImageEditor/WhiteboardSession.ts`
+## The remote session client is dead code
+`open` `medium` `src/lib/ImageEditor/WhiteboardSession.ts`
 
-`sessionId` is held only in the `WhiteboardSession` instance in memory; there's no route param
-and no storage. Reloading `/whiteboard/s` starts over, losing the uploaded image and any
-processing. The commented-out legacy code shows an earlier design that did
-`goto('/whiteboard/s/<id>')`, which would have survived a refresh.
+Nothing constructs `WhiteboardSession` since the editor moved to
+[the local pipeline](../whiteboard/README.md). It is kept as a fallback and as the record of the
+API contract, but it is unverified from here on — nothing exercises it, and the hosted service it
+targets is not reliably up.
+
+It also carries two smaller problems of its own: a large commented-out legacy `startProcess()`
+block, which [conventions](../../../conventions.md#comments) say shouldn't be committed, and a
+`getOptions()` that calls `response.json()` when the backend returns `key=value` lines as
+`text/plain` — it would reject on the first character, and has never thrown only because nothing
+calls it.
+
+Decide whether the fallback is worth keeping. If it isn't, deleting the file removes all three
+problems at once.
+
+## Sessions don't survive a page refresh
+`known` `medium` `src/lib/ImageEditor/LocalWhiteboardSession.ts`
+
+The decoded image lives only in the `LocalWhiteboardSession` instance in memory; there is no
+route param and no storage. Reloading `/whiteboard/s` starts over, losing the uploaded image and
+any processing.
+
+Now that processing is local this is more fixable than it was — there is no server session to
+reattach to, just an image to keep. Persisting it would mean writing the decoded image to
+IndexedDB and restoring it on load.
 
 ## Clipboard copy silently falls back to download
 `known` `low` `src/lib/ImageEditor/ToolBar.svelte`
@@ -79,8 +99,8 @@ a download instead. If the backend ever returns a non-PNG, the Clipboard button 
 behave as Download with no explanation to the user.
 
 ## No auth or rate limiting on the API
-`known` `medium` `src/lib/ImageEditor/WhiteboardSession.ts`
+`known` `low` `src/lib/ImageEditor/WhiteboardSession.ts`
 
-`POST /start` is open — anyone can create sessions and upload images. Nothing in the client
-authenticates, and there's no client-side throttling. Whether this matters depends on the
-backend, which is a separate repo.
+`POST /start` is open — anyone can create sessions and upload images, with no client-side
+authentication or throttling. Now only a concern for the hosted service itself: the site no
+longer calls it, so this cannot be reached from here.

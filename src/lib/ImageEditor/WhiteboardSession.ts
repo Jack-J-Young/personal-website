@@ -1,3 +1,4 @@
+import type { ProcessorSession } from "./ProcessorSession";
 import type { ProcessorSettings } from "./ViewerProperties";
 
     // function startProcess() {
@@ -36,7 +37,12 @@ import type { ProcessorSettings } from "./ViewerProperties";
     //     });
     // }
 
-export class WhiteboardSession {
+/**
+ * The hosted processor at `api.jackyoung.xyz`. Superseded by
+ * [`LocalWhiteboardSession`](./LocalWhiteboardSession.ts), which runs the same pipeline in the
+ * browser; kept as the fallback and as the record of the API contract.
+ */
+export class WhiteboardSession implements ProcessorSession {
     private url: string;
     private sessionId: string | null = null;
     // private authToken: string;
@@ -72,8 +78,10 @@ export class WhiteboardSession {
         });
     }
 
+    // The path is fixed for the life of the session, so a re-fetch after an options change needs
+    // busting or the browser serves the previous preview.
     getPreviewUrl(): string {
-        return `${this.url}/s/${this.sessionId}/preview`;
+        return `${this.url}/s/${this.sessionId}/preview?t=${Date.now()}`;
     }
 
     getPreview(): Promise<string> {
