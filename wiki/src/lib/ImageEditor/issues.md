@@ -43,28 +43,6 @@ Details that are easy to get wrong:
   — but Escape must not dismiss it when there is no image behind it, since that leaves the user
   staring at an empty editor with no way back.
 
-## Changing a setting after processing should drop back to Preview
-`planned` `medium` `src/lib/ImageEditor/SidePanel.svelte` `src/lib/ImageEditor/ToolBar.svelte`
-
-`SidePanel.setOption` only refreshes the preview `if (state == ViewerState.Preview)`, and in
-`Processed` the toolbar's right-hand slot shows Clipboard and Download — there is no Process
-button. So toggling Transparent or Dark mode after processing **updates the stored settings while
-leaving the previous full-resolution image on screen**, with no way to re-run it. The user is
-looking at a result that no longer matches the settings, and Download hands them that stale file.
-
-Wanted: changing any processor setting in `Processed` returns to `Preview` — re-render the
-low-resolution preview with the new settings, and the Process button comes back.
-
-This is the first *backwards* transition in `ViewerState`, so a few things need care:
-
-- Revoke the processed object URL and clear `imageBlob`, or Clipboard and Download keep serving
-  the stale result even after the state has changed.
-- `ToolBar.startPreview()` removes the Transform tool from the toolbar; re-entering Preview must
-  not re-add it, at least until [the two-image
-  refactor](#split-the-editor-into-an-input-image-and-an-output-image) makes the quad editable
-  again.
-- Preview re-renders are cheap (~75ms), so this can be immediate rather than behind a button.
-
 ## No pinch-to-zoom, so mobile has no zoom at all
 `open` `medium` `src/lib/ImageEditor/Tool.ts` `src/lib/ImageEditor/ImageViewer.svelte`
 

@@ -12,11 +12,20 @@
         let settings = { ...vps.get().settings, [key]: value };
         vps.set({ settings });
 
-        if (vps.get().state == ViewerState.Preview) refreshPreview(settings);
+        if (vps.get().state != ViewerState.Editing) refreshPreview(settings);
     }
 
+    /**
+     * Re-renders the preview, returning to `Preview` from `Processed` if that is where we were.
+     *
+     * A processed image is only valid for the settings it was made with, and Clipboard and
+     * Download read it straight out of the store — so leaving it in place after a setting
+     * changes would show one thing and hand the user another.
+     */
     function refreshPreview(settings: ProcessorSettings) {
-        vps.set({ loading: true });
+        let stale = vps.get().state == ViewerState.Processed ? vps.get().image : null;
+
+        vps.set({ loading: true, state: ViewerState.Preview, imageBlob: null });
 
         vps.get().sessionApi?.setOptions(settings).then(() => {
             // Each refresh yields a distinct URL, so the <img> reloads and clears `loading`
@@ -24,6 +33,9 @@
             vps.set({
                 image: vps.get().sessionApi?.getPreviewUrl(),
             });
+
+            // Released only once it has been replaced on screen, not when it went stale.
+            if (stale) URL.revokeObjectURL(stale);
         });
     }
 </script>

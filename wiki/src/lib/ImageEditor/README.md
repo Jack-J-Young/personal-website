@@ -54,6 +54,8 @@ where `camX` is subtracted). Preserve it, or fix it everywhere at once.
 
 ```
 Editing  --[Preview]-->  Preview  --[Process]-->  Processed
+                            ^                          |
+                            +----[settings changed]-----+
 ```
 
 - **Editing** — local file only; the user may place 4 transform points.
@@ -64,8 +66,19 @@ Editing  --[Preview]-->  Preview  --[Process]-->  Processed
 - **Processed** — the full-resolution result, kept in the store as both a `Blob` (for the
   clipboard) and an object URL (for display and download).
 
-While in Preview, toggling a checkbox in `SidePanel` pushes the options and re-reads the preview
-URL. Each refresh yields a distinct URL, so the `<img>` reloads on its own.
+Toggling a checkbox in `SidePanel` pushes the options and re-reads the preview URL. Each refresh
+yields a distinct URL, so the `<img>` reloads on its own and clears `loading`.
+
+**Changing a setting in `Processed` goes back to `Preview`** — the only backwards transition.
+A processed image is valid only for the settings it was made with, and Clipboard and Download
+read it straight out of the store, so keeping it would show one thing and hand the user another.
+`refreshPreview` therefore clears `imageBlob` immediately, and releases the processed object URL
+**after** the new preview has replaced it on screen — revoking it while it is still displayed
+would blank the viewer mid-swap.
+
+Re-entering Preview deliberately does *not* restore the Transform tool. The quad is baked into
+the stored image at upload, so there would be nothing for it to edit; that changes with
+[the two-image split](issues.md).
 
 ### Who does the processing
 
