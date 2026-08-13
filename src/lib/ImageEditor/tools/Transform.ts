@@ -1,5 +1,5 @@
 import { Tool } from "../Tool";
-import transform_icon from "$lib/ImageEditor/icons/transform.svg";
+import TransformIcon from "../icons/TransformIcon.svelte";
 import type { GestureCustomEvent } from "svelte-gestures";
 
 function calculateAngleFromReference(
@@ -68,7 +68,7 @@ function sortQuadPointsClockwiseFromTopLeft(
 export class Transform extends Tool {
     constructor() {
         super({
-            icon: transform_icon,
+            icon: TransformIcon,
             name: "Transform",
             hoverText: "Perspective transform: Click to add 4 corners, drag to move corners.",
             selectable: true

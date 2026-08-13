@@ -1,11 +1,11 @@
 import { Tool } from "../Tool";
-import settings_icon from "$lib/ImageEditor/icons/settings.svg";
+import SettingsIcon from "../icons/SettingsIcon.svelte";
 import { get } from "svelte/store";
 
 export class Settings extends Tool {
     constructor() {
         super({
-            icon: settings_icon,
+            icon: SettingsIcon,
             name: "Settings",
             hoverText: "Change settings for the image processor.",
             // selectable: true

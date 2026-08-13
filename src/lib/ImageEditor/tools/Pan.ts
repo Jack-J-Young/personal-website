@@ -1,10 +1,10 @@
 import { Tool } from "../Tool";
-import pan_icon from "$lib/ImageEditor/icons/pan.svg";
+import PanIcon from "../icons/PanIcon.svelte";
 
 export class Pan extends Tool {
     constructor() {
         super({
-            icon: pan_icon,
+            icon: PanIcon,
             name: "Pan",
             hoverText: "Click and drag to pan the image.",
             selectable: true

@@ -15,17 +15,67 @@ the non-obvious part of the codebase: interaction is built from **tool classes**
 
 Guide: [adding a tool](../../../guides/adding-a-tool.md).
 
+## Leaving the editor
+
+The toolbar logo is the only way out — [the layout hides the site nav](../../routes/README.md)
+on this route — and it discards the user's image, since nothing is stored anywhere. So it
+confirms first, whenever `hasWorkInProgress` holds.
+
+- **It is a real `<a href="/">`,** not a button calling `goto()`. Middle-click and ctrl-click
+  keep working, and the anchor takes its accessible name from the logo's alt text. The click
+  handler bails out on any modified click — those open a new tab and leave the editor exactly
+  where it is, so there is nothing to confirm.
+- **`hasWorkInProgress` lives in `ViewerProperties.ts`** so every "are you sure" in the editor
+  asks the same question. It is simply "has an image been loaded", not "were changes made" — the
+  dead `changesMade` flag in `ToolBar` is not the test and should not be revived for it.
+- **[`ConfirmDialog`](../ui/README.md) is opened by a method, not an `open` prop.** A
+  confirmation is a question asked once, not a state worth mirroring, and the method form cannot
+  desync from the element — which a boolean provably can. Its own docs explain why.
+
+A `beforeunload` handler would be the same question for reloads and tab closes. It doesn't exist;
+it would want the same predicate.
+
+## Styling
+
+The editor is built from [the design system](../ui/README.md) and themes with the rest of the
+site. It has no colours of its own — every value is a token — but it keeps its own components,
+because a toolbar floating over someone's photograph is a different problem from a page.
+
+Three things about it are worth knowing:
+
+- **`Tool.icon` is a component, not a URL.** Icons are inline SVG drawn with `currentColor`, so
+  `ToolIcon` colours them through ordinary CSS. They used to be `.svg` files with the palette
+  baked into their `fill`, which is why the old selected and disabled states were faked with
+  `brightness()` filters — the colour was somewhere CSS could not reach. Adding an icon means
+  adding a component under `icons/`, not an asset.
+- **`EditorButton` shares `buttonClasses` with the site's `Button`.** It does not restate the
+  primary-action look, so the editor's main action cannot drift from every other primary action.
+  All it adds is the trailing icon.
+- **The canvas and the quad overlay use their own tokens** — `--editor-canvas`, and the
+  deliberately unthemed `--marker` / `--marker-soft`. The reasoning is in
+  [the ui README](../ui/README.md#tokens); the short version is that a backdrop behind a
+  near-white image and a line drawn on top of an arbitrary photo are not surface colours.
+
+The toolbar carries the site's [`ThemeToggle`](../ui/README.md) at the right, ahead of the
+contextual action so the primary button stays pinned to the right edge rather than shifting as
+the session advances. It is the same component the site nav uses and writes the same stored
+preference — the editor is simply another place to reach it, which it has to be, since
+[the site nav is hidden here](../../routes/README.md).
+
+Layout was deliberately left alone — see [issues](issues.md).
+
 ## Who owns what
 
 | File | Role |
 |---|---|
 | `ImageViewer.svelte` | Owns the store instance. File upload, image load, camera CSS, transform-point overlay. Delegates every gesture to the active tool. |
-| `ToolBar.svelte` | Instantiates the tools, builds the toolbar groups, wires select/hover into the info text, owns the Preview → Process → Clipboard/Download buttons. |
+| `ToolBar.svelte` | Instantiates the tools, builds the toolbar groups, wires select/hover into the info text, owns the home link, the theme toggle, and the Preview → Process → Clipboard/Download buttons. |
 | `SidePanel.svelte` | Processor settings checkboxes. Slides in and out from the left edge based on `vp.setting`. |
 | `InfoBar.svelte` | Bottom status text — the `hoverText` of the hovered or active tool. |
 | `ToolIcon.svelte` | One toolbar button. Dispatches `selectTool`/`hoverTool`; holds no state. |
-| `TransformPoint.svelte`, `TransformRegion.svelte` | The corner markers and the red quad overlay. |
-| `EditorButton.svelte` | The styled action button used at the right of the toolbar. |
+| `TransformPoint.svelte`, `TransformRegion.svelte` | The corner markers and the quad overlay. |
+| `EditorButton.svelte` | The primary action button at the right of the toolbar. |
+| `icons/` | Inline SVG icon components drawn with `currentColor`. |
 | `CameraControls.ts` | `centerCamera` and `fancyZoom`. |
 
 The canonical store instance is created as the default value of the `vps` prop in

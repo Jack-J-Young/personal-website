@@ -17,9 +17,13 @@ these are client-rendered unless a route opts into prerendering.
 The shared shell: [`Nav`](../lib/ui/README.md), `<main>`, [`Footer`](../lib/ui/README.md), and
 [`ScrollToTop`](../lib/ui/README.md#scrolltotop), in a min-height flex column.
 
-**The chrome is hidden on `/whiteboard/s`.** The editor is full-bleed and carries its own toolbar
-with a home button in it, so the site nav would duplicate that and steal vertical space. The
-layout branches on the pathname and renders a bare full-height `<main>` for that route.
+**The chrome is hidden on `/whiteboard/s`.** The editor is full-bleed and carries its own toolbar,
+so the site nav would duplicate it and steal vertical space. The layout branches on the pathname
+and renders a bare full-height `<main>` for that route.
+
+That reasoning depends on the editor offering its own way home, which its toolbar logo now is —
+see [the editor's README](../lib/ImageEditor/README.md#leaving-the-editor). Removing that link
+would strand anyone on the route.
 
 ## The editor page
 

@@ -3,29 +3,31 @@
     import ToolIcon from "./ToolIcon.svelte";
     import { type Tool } from "./Tool";
     import { Pan } from "./tools/Pan";
+    import { Upload } from "./tools/Upload";
     import { get, writable, type Writable } from "svelte/store";
-    import { ViewerState, type ViewerPropertiesStore } from "./ViewerProperties";
+    import { createEventDispatcher } from "svelte";
+    import { goto } from "$app/navigation";
+    import ConfirmDialog from "$lib/ui/ConfirmDialog.svelte";
+    import ThemeToggle from "$lib/ui/ThemeToggle.svelte";
+    import { hasWorkInProgress, ViewerState, type ViewerPropertiesStore } from "./ViewerProperties";
     import { Transform } from "./tools/Transform";
     import EditorButton from "./EditorButton.svelte";
 
-    import upload_icon from "$lib/ImageEditor/icons/upload.svg";
-    import settings_icon from "$lib/ImageEditor/icons/settings.svg";
-    // import pan from "$lib/ImageEditor/icons/pan.svg";
-    // import transform from "$lib/ImageEditor/icons/transform.svg";
-    import zoom_icon from "$lib/ImageEditor/icons/zoom.svg";
-    import zoomOut_icon from "$lib/ImageEditor/icons/zoomOut.svg";
-    import zoomIn_icon from "$lib/ImageEditor/icons/zoomIn.svg";
-    import help_icon from "$lib/ImageEditor/icons/help.svg";
-    import chev_icon from "$lib/ImageEditor/icons/chev-right.svg";
+    import ZoomIcon from "./icons/ZoomIcon.svelte";
+    import ZoomOutIcon from "./icons/ZoomOutIcon.svelte";
+    import ZoomInIcon from "./icons/ZoomInIcon.svelte";
+    import HelpIcon from "./icons/HelpIcon.svelte";
+    import ChevronRightIcon from "./icons/ChevronRightIcon.svelte";
     import { Settings } from "./tools/Settings";
 
     export let infoText: string = "";
     export let vps: ViewerPropertiesStore;
 
+    const dispatch = createEventDispatcher<{ requestUpload: null }>();
+
     $: vp = vps ? vps.ref() : null;
 
-    let changesMade: boolean = false;
-    
+    let uploadTool: Tool = new Upload(() => dispatch("requestUpload"));
     let settingsTool: Tool = new Settings();
     let panTool: Tool = new Pan();
     let transformTool: Tool = new Transform();
@@ -35,15 +37,16 @@
 
     let tools: Writable<Tool[][]> = writable([]);
 
+    /**
+     * Builds the toolbar from scratch. Called on every image load, not just the first, because
+     * `startPreview` removes the Transform tool for the rest of that session — a new image has to
+     * get it back.
+     */
     export function loadTools() {
         // list of list of tools
         let newTools = [
             [
-                {
-                    icon: upload_icon,
-                    name: "Upload Image",
-                    hoverText: `Upload image from your device${changesMade ? " and undo changes" : ""}.`
-                },
+                uploadTool,
                 settingsTool,
             ],
             [
@@ -52,21 +55,21 @@
             ],
             [
                 {
-                    icon: zoom_icon,
+                    icon: ZoomIcon,
                     name: "Zoom",
                     hoverText: "Click and drag to zoom in and out.",
                     selectable: true,
                     disabled: true,
                 },
                 {
-                    icon: zoomOut_icon,
+                    icon: ZoomOutIcon,
                     name: "Zoom Out",
                     hoverText: "Zoom out the image.",
                     selectable: true,
                     disabled: true,
                 },
                 {
-                    icon: zoomIn_icon,
+                    icon: ZoomInIcon,
                     name: "Zoom In",
                     hoverText: "Zoom in the image.",
                     selectable: true,
@@ -75,7 +78,7 @@
             ],
             [
                 {
-                    icon: help_icon,
+                    icon: HelpIcon,
                     name: "Tour",
                     hoverText: "Get a tour of the image processor.",
                     disabled: true,
@@ -93,7 +96,11 @@
 
         tools.set(newTools);
 
+        // The tools outlive the rebuild, so whichever was selected has to be told it no longer is
+        // — otherwise its icon stays lit while Pan is the tool actually receiving gestures.
+        get(tool)?.onDeselect();
         tool.set(panTool);
+        panTool.onSelect();
     }
 
     // panTool.vps = vps;
@@ -211,15 +218,30 @@
             setting: !setting,
         });
     }
+
+    let leaveDialog: ConfirmDialog;
+
+    /**
+     * Guards the trip home. A modified click opens a new tab and leaves the editor exactly where
+     * it is, so there is nothing to confirm and the browser should handle it untouched.
+     */
+    function requestLeave(event: MouseEvent) {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (!hasWorkInProgress(vps.get())) return;
+
+        event.preventDefault();
+        leaveDialog.show();
+    }
 </script>
 
 <div class="tool-bar">
     {#if vp}
     <div class="tools-left">
-        <!-- icon from static/favicon.png -->
-        <div class="tools-home-logo">
-            <img src="/favicon.png" alt="home"/>
-        </div>
+        <!-- A real link, so middle-click and ctrl-click still open a new tab; the confirmation
+             only intercepts the plain click that would actually leave the editor. -->
+        <a class="tools-home-logo" href="/" on:click={requestLeave}>
+            <img src="/favicon.png" alt="Home"/>
+        </a>
         {#if $tools.length > 0}
             {#each $tools[0] as _tool}
                 <ToolIcon bind:tool={_tool} on:selectTool={selectTool} on:hoverTool={updateHoverTool} />
@@ -227,11 +249,7 @@
         {/if}
         {#if $tools.length > 1}
             {#each $tools.slice(1) as toolGroup}
-                <Separator.Root orientation='vertical' class="h-6"
-                    style="background-color: #ADAFB2; 
-                    box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
-                    width: 2px;
-                    border-radius: 2px;" />
+                <Separator.Root orientation='vertical' class="h-6 w-px rounded-sm bg-border" />
                 {#each toolGroup as _tool}
                     <ToolIcon bind:tool={_tool} on:selectTool={selectTool} on:hoverTool={updateHoverTool} />
                 {/each}
@@ -239,10 +257,14 @@
         {/if}
     </div>
     <div class="tools-right">
+        <!-- Ahead of the contextual action, so the primary button stays pinned to the right edge
+             instead of shifting as the session advances. -->
+        <ThemeToggle />
+        <Separator.Root orientation='vertical' class="h-6 w-px rounded-sm bg-border" />
         {#if $vp?.state == ViewerState.Editing}
-            <EditorButton text="Preview" icon={chev_icon} disabled={!$vp?.image || $vp?.loading} click={startPreview}/>
+            <EditorButton text="Preview" icon={ChevronRightIcon} disabled={!$vp?.image || $vp?.loading} click={startPreview}/>
         {:else if $vp?.state == ViewerState.Preview}
-            <EditorButton text="Process" icon={chev_icon} disabled={$vp?.loading} click={process}/>
+            <EditorButton text="Process" icon={ChevronRightIcon} disabled={$vp?.loading} click={process}/>
         {:else}
             <EditorButton text="Clipboard" click={copyToClipboard}/>
             <EditorButton text="Download" click={downloadImage}/>
@@ -250,6 +272,16 @@
     </div>
     {/if}
 </div>
+
+<ConfirmDialog
+    bind:this={leaveDialog}
+    title="Leave the editor?"
+    confirmLabel="Leave"
+    cancelLabel="Stay"
+    on:confirm={() => goto("/")}>
+    Your image and any processing will be discarded. Nothing has been uploaded anywhere, so it
+    cannot be recovered.
+</ConfirmDialog>
 
 <style>
     .tool-bar {
@@ -262,13 +294,8 @@
         padding: 0.5rem;
         padding-left: 1rem;
 
-        /* horizontal gradient */
-        background: #2A2B2D
-            linear-gradient(
-                rgba(255, 255, 255, 0.1),
-                rgba(255, 255, 255, 0.0)
-            );
-        border-bottom: 1px solid #5E5E5E;
+        background-color: var(--surface);
+        border-bottom: 1px solid var(--border);
     }
 
     .tools-left {
@@ -293,7 +320,14 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        padding: 0;
+        padding: 0.125rem;
+
+        border-radius: var(--radius-sm);
+        transition: background-color 150ms ease;
+    }
+
+    .tools-home-logo:hover {
+        background-color: var(--surface-raised);
     }
 
     .tools-home-logo img {

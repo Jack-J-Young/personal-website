@@ -3,15 +3,12 @@
     import type { Tool } from "./Tool";
     import { ViewerPropertiesStore, ViewerState } from "./ViewerProperties";
     import type { GestureCustomEvent } from "svelte-gestures/src/shared";
-    import { createEventDispatcher } from 'svelte';
     import { centerCamera } from './CameraControls';
     import { get, type Writable } from 'svelte/store';
     import TransformPoint from './TransformPoint.svelte';
     import TransformRegion from './TransformRegion.svelte';
     import { LocalWhiteboardSession } from './LocalWhiteboardSession';
     import SidePanel from './SidePanel.svelte';
-    
-    let dispatch = createEventDispatcher();
 
     export let tool: Writable<Tool>;
 
@@ -45,29 +42,7 @@
     // let editor: HTMLDivElement;
     // $: editor = vp.editor;
 
-    function handleFileChange(event: Event) {
-        let vp = vps.get();
-
-        if (vp.preview) return;
-        let input = event.target as HTMLInputElement;
-        if (input.files && input.files[0]) {
-            let reader = new FileReader();
-            let imageRaw = input.files[0];
-            reader.onload = (e) => {
-                // set image to img src
-                let image = e.target?.result as string;
-                vps.set({
-                    imageRaw,
-                    image,
-                });
-            }
-            reader.readAsDataURL(imageRaw);
-        }
-    }
-
     function onImageLoad(event: Event) {
-        let firstLoad = vps.get().editor == null;
-
         vps.set({
             imageWidth: (event.target as HTMLImageElement).naturalWidth,
             imageHeight: (event.target as HTMLImageElement).naturalHeight,
@@ -75,9 +50,6 @@
             editor,
         });
         centerCamera(vps);
-
-        if (firstLoad)
-            dispatch('firstLoad', true);
     }
     
     function onClick(event: MouseEvent) {
@@ -109,85 +81,73 @@
     }
 </script>
 
-<div class="w-full grow relative overflow-hidden min-w-0"
+<!-- Empty until an image is loaded: the upload dialog is the empty state, so there is nothing to
+     draw here but the canvas it will appear over. -->
+<div class="viewer w-full grow relative overflow-hidden min-w-0"
     style="--camX: {$vp.camX}px; --camY: {$vp.camY}px; --zoom: {$vp.zoom};">
 
-    <label class="flex flex-col w-full h-full" for="input-image">
-        <input disabled={$vp.image != null}
-            type="file"
-            id="input-image"
-            accept="image/*"
+    {#if $vp.loading}
+        <div class="viewer-overlay">
+            <h1>Loading...</h1>
+        </div>
+    {/if}
+    <SidePanel closed={!$vp.setting} vps={vps} />
+    {#if $vp.image}
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <div class="image-editor"
+            role="application"
+            aria-label="Image editor"
 
-            hidden
-            style="user-select: none"
-            
-            on:change={handleFileChange}/>
+            bind:this={editor}
 
-        {#if $vp.loading}
-            <div class="viewer-overlay">
-                <h1>Loading...</h1>
-            </div>
-        {/if}
-        <SidePanel closed={!$vp.setting} vps={vps} />
-        {#if $vp.image}
-            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-            <div class="image-editor"
-                role="application"
-                aria-label="Image editor"
-                
-                bind:this={editor}
+            use:pan
+            on:pandown={panOn}
+            on:panup={panOff}
+            on:panmove={panMove}
+            >
+            <!-- on:pinchdown={tool.pinchOn}
+            use:pinch
+            on:pinch={tool.zoom}
+            > -->
 
-                use:pan
-                on:pandown={panOn}
-                on:panup={panOff}
-                on:panmove={panMove}
-                >
-                <!-- on:pinchdown={tool.pinchOn}
-                use:pinch
-                on:pinch={tool.zoom}
-                > -->
+            <div class="editor-image-container">
+                <img draggable="false"
+                    id="input-file"
+                    class="editor-image"
 
-                <div class="editor-image-container">
-                    <img draggable="false"
-                        id="input-file"
-                        class="editor-image"
+                    src="{$vp.image}"
+                    alt="uploaded in editor"
 
-                        src="{$vp.image}"
-                        alt="uploaded in editor"
-
-                        on:load={onImageLoad}
-                        />
-                    {#if !$vp.preview}
-                        <div class="image-overlay">
-                            <div id="overlay-container">
-                                {#each $vp.transformPoints as point}
-                                    <TransformPoint x={point.x} y={point.y} />
-                                {/each}
-                                {#if ($vp.transformPoints.length == 4)}
-                                    <TransformRegion
-                                    points={$vp.transformPoints}
-                                    imgWidth={$vp.imageWidth}
-                                    imgHeight={$vp.imageHeight} />
-                                {/if}
-                            </div>
+                    on:load={onImageLoad}
+                    />
+                {#if !$vp.preview}
+                    <div class="image-overlay">
+                        <div id="overlay-container">
+                            {#each $vp.transformPoints as point}
+                                <TransformPoint x={point.x} y={point.y} />
+                            {/each}
+                            {#if ($vp.transformPoints.length == 4)}
+                                <TransformRegion
+                                points={$vp.transformPoints}
+                                imgWidth={$vp.imageWidth}
+                                imgHeight={$vp.imageHeight} />
+                            {/if}
                         </div>
-                    {/if}
-                    <button class="image-click-handler" on:click={onClick} />
-                </div>
+                    </div>
+                {/if}
+                <button class="image-click-handler" on:click={onClick} />
             </div>
-        {:else}
-            <div class="flex flex-col items-center justify-center h-full w-full">
-                <div class="upload-graphic flex flex-col items-center justify-center gap-4">
-                    <div class="up"></div>
-                    <h1>Upload and edit</h1>
-                    <p>Drag and drop or click here to upload an image</p>
-                </div>
-            </div>
-        {/if}
-    </label>
+        </div>
+    {/if}
 </div>
 
 <style>
+    /* Its own token rather than a surface: this sits behind the user's photograph, so it has to
+       stay a neutral backdrop that a near-white processed image reads against. */
+    .viewer {
+        background-color: var(--editor-canvas);
+    }
+
     .viewer-overlay {
         position: absolute;
         width: 100%;
@@ -201,32 +161,16 @@
         justify-content: center;
         align-items: center;
 
-        background: rgba(0, 0, 0, 0.5);
+        background: var(--overlay-scrim);
+        backdrop-filter: blur(2px);
 
         z-index: 100;
     }
 
     .viewer-overlay h1 {
-        color: white;
-    }
-
-    .up {
-        width: 40%;
-        height: 40%;
-        background-color: slateblue;
-        border-radius: 50%;
-    }
-
-    .upload-graphic {
-        max-width: 60%;
-        max-height: 60%;
-        aspect-ratio: 1;
-        
-        flex-grow: 1;
-
-        /* dashed border with rounded edges */
-        border: .4rem dashed #000;
-        border-radius: 3rem;
+        color: var(--text);
+        font-size: 1.125rem;
+        font-weight: 600;
     }
 
     .image-editor {
@@ -234,12 +178,7 @@
         width: 100%;
         height: 100%;
         position: relative;
-        /* background: black; */
         overflow: hidden;
-
-        background-color: #262629;
-
-        /* click through */
     }
 
     .editor-image-container {
@@ -262,9 +201,12 @@
 
         box-shadow: 0 0 100px 100px rgba(0, 0, 0, .2);
         
-        background-color: white;
-        background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
-                        linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+        /* The chequerboard that shows through a transparent result. Built from surface tokens so
+           it stays a quiet "nothing is here" texture in both themes rather than a white glare. */
+        background-color: var(--surface);
+        background-image:
+            linear-gradient(45deg, var(--border) 25%, transparent 25%, transparent 75%, var(--border) 75%, var(--border)),
+            linear-gradient(45deg, var(--border) 25%, transparent 25%, transparent 75%, var(--border) 75%, var(--border));
         background-size: 40px 40px;
         background-position: 0 0, 20px 20px;
 

@@ -3,8 +3,10 @@
 The design system. Every visual decision on the site — colour, type, spacing, radius — is made
 here, so pages compose components instead of restating styles.
 
-The [editor](../ImageEditor/README.md) predates this and is deliberately excluded: it keeps its
-own hardcoded palette and is not built from these components.
+The [editor](../ImageEditor/README.md) predates this and was once excluded, but no longer: it
+draws from these tokens, shares `buttonClasses`, and themes with the rest of the site. It still
+keeps its own components, because a toolbar over an image is a genuinely different problem from a
+marketing page — but they are built from the same vocabulary.
 
 ## Tokens
 
@@ -25,6 +27,24 @@ always the same colour, and a theme change touches one file.
 
 Plus `--accent-hover`, `--accent-subtle`, `--bg-translucent`, `--shadow`, the radius scale, and
 `--font-sans` / `--font-mono`.
+
+Two more exist for the [editor](../ImageEditor/README.md), which has needs no page has:
+
+| Token | Why it isn't an existing one |
+|---|---|
+| `--editor-canvas` | The backdrop *behind* the user's photograph. A surface colour is too close to a near-white processed image to read against, so it is deliberately darker than `--surface-raised` in light and darker than `--bg` in dark. |
+| `--overlay-scrim` | The translucent wash under the loading state. Tailwind 3 drops opacity modifiers on `var()` colours, so this cannot be `bg-bg/72`. |
+
+And two that are **not** themed at all, declared once in a separate `:root` block:
+
+```css
+--marker: #ff4438;
+--marker-soft: rgba(255, 68, 56, 0.25);
+```
+
+These draw the transform quad on top of the user's photograph. They deliberately ignore the theme
+— what they have to contrast with is an arbitrary image, not the page. A token that changed with
+the theme would be the wrong answer twice.
 
 The dark accent is the editor's `#7979FF` nudged, so moving between the site and the editor
 feels continuous. The light accent is darkened for contrast on white.
@@ -53,6 +73,10 @@ than image assets: they inherit their colour from the button around them and the
 with no per-theme handling at all. An imported white PNG would need a filter token to stay
 visible on a light surface.
 
+The editor's icons follow the same rule, in `ImageEditor/icons/`. They were image assets with the
+old palette baked into their `fill`, which is why `ToolIcon` used to fake its states with
+`brightness()` filters — the icon's colour was not something CSS could reach.
+
 **Don't use opacity modifiers on token colours.** Tailwind 3 cannot apply `/50` to a colour
 defined as `var(--x)`; the utility is silently dropped. Add an explicit token instead, which is
 why `--bg-translucent` and `--accent-subtle` exist rather than `bg-bg/85`.
@@ -76,6 +100,7 @@ why `--bg-translucent` and `--accent-subtle` exist rather than `bg-bg/85`.
 | `SocialLinks` | The site's contact row — email and GitHub |
 | `icons/` | Inline SVG icon components drawn with `currentColor` |
 | `Card` | Surface panel, `padded` and `interactive` |
+| `ConfirmDialog` | Modal "are you sure", opened with `show()`, emits `confirm`/`cancel` |
 | `ThemeToggle` | Sun/moon toggle |
 | `Nav` | Site header |
 | `Footer` | Site footer |
@@ -83,6 +108,14 @@ why `--bg-translucent` and `--accent-subtle` exist rather than `bg-bg/85`.
 
 `Heading` splits `level` from `size` on purpose: a page can keep a correct heading outline
 without being forced into a type scale.
+
+`ConfirmDialog` is opened by calling `show()` on the component, rather than by setting an `open`
+prop. It wraps a native `<dialog>`, so focus trapping, Escape and the backdrop come from the
+browser — and the element's own state is then the only source of truth. A boolean prop would have
+to be written back whenever the browser dismissed the dialog itself, and one missed `close` event
+leaves the prop stuck at `true`; asking again would then do nothing, because assigning `true` to
+something already `true` changes nothing and the dialog would never reopen. That is not
+hypothetical — it is exactly what the first version did.
 
 ## Variant, or new component?
 

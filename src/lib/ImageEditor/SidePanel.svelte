@@ -67,8 +67,8 @@
         top: 0;
         width: auto;
         height: 100%;
-        background-color: #232326;
-        border-right: 1px solid #ADAFB2;
+        background-color: var(--surface);
+        border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
         justify-content: start;
@@ -97,20 +97,25 @@
     .option span {
         padding: 0.3rem 1rem 0.3rem 1rem;
         height: min-content;
-        color: #ADAFB2;
+        color: var(--text);
         flex-grow: 1;
     }
 
     .option input {
-        margin: 0.3rem 1rem 0.3rem 1rem; 
+        margin: 0.3rem 1rem 0.3rem 1rem;
+        accent-color: var(--accent);
     }
 
     .panel-heading {
-        color: #ADAFB2;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
         font-weight: 600;
         padding: 0.5rem 1rem 0.5rem 1rem;
         margin-left: 0.5rem;
         margin-right: 0.5rem;
-        border-bottom: 1px solid #ADAFB2;
+        border-bottom: 1px solid var(--border);
     }
 </style>

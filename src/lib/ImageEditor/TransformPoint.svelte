@@ -12,8 +12,7 @@
         width: 50px;
         height: 50px;
 
-        /* circle border 2px red */
-        border: 2px solid red;
+        border: 2px solid var(--marker);
         border-radius: 50%;
         position: absolute;
         left: -25px;
@@ -32,8 +31,7 @@
         width: 2px;
         height: 2px;
 
-        /* circle 1px black */
-        background-color: red;
+        background-color: var(--marker);
 
         border-radius: 50%;
     }

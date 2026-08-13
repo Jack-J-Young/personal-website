@@ -1,3 +1,4 @@
+import type { ComponentType } from "svelte";
 import type { GestureCustomEvent, PinchPointerEventDetail } from "svelte-gestures";
 import type { ViewerProperties, ViewerPropertiesStore } from "./ViewerProperties";
 import { fancyZoom } from "./CameraControls";
@@ -5,7 +6,9 @@ import { writable, type Writable } from "svelte/store";
 
 export class Tool {
     vps: ViewerPropertiesStore | null = null;
-    icon: string;
+    // An icon component, not an image URL: drawn with `currentColor` so it takes its colour from
+    // the button around it and needs no per-theme handling.
+    icon: ComponentType;
     name: string;
     hoverText: string;
     selectable: boolean;

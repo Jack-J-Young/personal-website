@@ -29,24 +29,21 @@ Two traps documented in full [in the ui README](src/lib/ui/README.md#two-rules-t
 Tailwind `dark:` variants don't work here (there's no `data-theme` attribute when following the
 OS), and Tailwind 3 silently drops opacity modifiers like `/50` on `var()` colours.
 
-### The editor is the exception
+### The editor is not an exception
 
-Everything under `src/lib/ImageEditor/` predates the design system and keeps **scoped `<style>`
-blocks with hard-coded hex**. Match that when working on editor UI rather than mixing the two
-systems:
+Everything under `src/lib/ImageEditor/` used to keep scoped `<style>` blocks full of hard-coded
+hex. It no longer does — it draws from the same tokens as the rest of the site and themes with
+it, so **the "no raw colours" rule above applies there too**.
 
-| | |
-|---|---|
-| `#2A2B2D` | toolbar |
-| `#232326` | panels, info bar |
-| `#ADAFB2` | muted text, borders |
-| `#5E5E5E` | dividers |
-| `#7979FF` | primary button |
-| `#262629` | canvas backdrop |
+What is still different is that the editor keeps its own *components* rather than composing
+`ui/` ones, because a toolbar over an image is a genuinely different problem from a page. That is
+a component boundary, not a licence to restate colours: `EditorButton` shares `buttonClasses`
+with the site's `Button` precisely so the two cannot drift.
 
-The site's dark accent is derived from that `#7979FF` so the two halves don't clash. Migrating
-the editor onto tokens would be a worthwhile change, but it's a project, not a side effect of
-another change.
+The editor does own four tokens no page needs — `--editor-canvas`, `--overlay-scrim`, and the
+deliberately unthemed `--marker` / `--marker-soft`. Adding to that set is fine when a colour
+genuinely has to survive being drawn over an arbitrary photograph; reaching for a hex is not.
+See [the editor's styling notes](src/lib/ImageEditor/README.md#styling).
 
 ## Static assets
 

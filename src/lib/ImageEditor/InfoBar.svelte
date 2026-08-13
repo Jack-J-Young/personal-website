@@ -18,13 +18,13 @@
         align-items: center;
         height: 2rem;
         padding: 0.5rem;
-        background-color: #232326;
 
-        background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, .5));
-        border-top: 1px solid #5E5E5E;
+        background-color: var(--surface);
+        border-top: 1px solid var(--border);
     }
 
     .info-bar span {
-        color: #ADAFB2;
+        color: var(--text-muted);
+        font-size: 0.875rem;
     }
 </style>

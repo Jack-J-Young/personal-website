@@ -4,6 +4,7 @@
     import InfoBar from "$lib/ImageEditor/InfoBar.svelte";
     import type { Tool } from "$lib/ImageEditor/Tool";
     import ToolBar from "$lib/ImageEditor/ToolBar.svelte";
+    import UploadDialog from "$lib/ImageEditor/UploadDialog.svelte";
     import { ViewerPropertiesStore } from "$lib/ImageEditor/ViewerProperties";
     import { get, writable, type Writable } from "svelte/store";
 
@@ -13,6 +14,7 @@
     // -- // Icons end // -- //
 
     let toolBar: ToolBar;
+    let uploadDialog: UploadDialog;
 
     let infoText = "This is a test message...";
 
@@ -69,8 +71,16 @@
             </filter>
         </defs>
     </svg>
-    <ToolBar bind:this={toolBar} bind:infoText={infoText} bind:tool={tool} vps={vps}/>
-    <ImageViewer tool={tool} bind:vps={vps} on:firstLoad={loadTools}/>
+    <ToolBar
+        bind:this={toolBar}
+        bind:infoText={infoText}
+        bind:tool={tool}
+        vps={vps}
+        on:requestUpload={() => uploadDialog.show()}/>
+    <ImageViewer tool={tool} bind:vps={vps}/>
+    <!-- After the viewer, so `vps` is bound by the time the dialog mounts and decides whether to
+         open itself. -->
+    <UploadDialog bind:this={uploadDialog} vps={vps} on:load={loadTools}/>
     <InfoBar bind:infoText={infoText} />
 </div>
 

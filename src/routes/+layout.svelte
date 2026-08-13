@@ -5,8 +5,8 @@
     import Nav from "$lib/ui/Nav.svelte";
     import ScrollToTop from "$lib/ui/ScrollToTop.svelte";
 
-    // The editor is full-bleed and carries its own toolbar, including a home
-    // button, so the site chrome would only duplicate it and steal height.
+    // The editor is full-bleed and carries its own toolbar, including a working
+    // home link, so the site chrome would only duplicate it and steal height.
     $: isEditor = $page.url.pathname.startsWith("/whiteboard/s");
 </script>
 

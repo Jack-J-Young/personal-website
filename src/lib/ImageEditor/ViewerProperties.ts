@@ -33,6 +33,16 @@ export interface ViewerProperties {
     settings: ProcessorSettings;
 }
 
+/**
+ * Whether leaving the editor, or loading a different photo, would throw away something the user
+ * has done. Any loaded image counts, however far through the session they are.
+ *
+ * Shared so that every "are you sure" in the editor asks the same question.
+ */
+export function hasWorkInProgress(vp: ViewerProperties): boolean {
+    return vp.image != null || vp.imageRaw != null;
+}
+
 export class ViewerPropertiesStore {
     private _vpStore: Writable<ViewerProperties>;
 

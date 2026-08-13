@@ -124,37 +124,17 @@ Implementation notes:
 This supersedes the "the crop is baked in at upload time" limitation noted in
 [the pipeline docs](../whiteboard/README.md#1-ingest--post-start).
 
-## Bring the editor onto the design system
-`planned` `medium` `src/lib/ImageEditor/ToolBar.svelte` `src/lib/ImageEditor/EditorButton.svelte` `src/lib/ImageEditor/ToolIcon.svelte` `src/lib/ImageEditor/SidePanel.svelte` `src/lib/ImageEditor/ImageViewer.svelte`
+## The editor's layout is not yet responsive
+`planned` `low` `src/lib/ImageEditor/ToolBar.svelte` `src/lib/ImageEditor/SidePanel.svelte`
 
-The editor predates [`src/lib/ui/`](../ui/README.md) and was deliberately left alone during the
-restyle. It carries its own hardcoded palette (`#7979FF`, `#ADAFB2` separators, inline
-`box-shadow` literals), its own `EditorButton` and `ToolIcon` rather than the shared primitives,
-and **no theme support at all** — it is dark-only, so a visitor on the light theme moves from a
-light site into a dark editor.
+The design system migration covered colour, type and components, not layout. The toolbar is a
+single non-wrapping row, so on a narrow screen the tool groups and the primary action compete for
+width and the right-hand button can be pushed off-screen. The side panel is a fixed overlay that
+covers much of a phone viewport when open.
 
-The work, roughly in order:
-
-1. **Tokens first.** Replace the hardcoded hex with the [design
-   tokens](../ui/README.md#tokens). This is mostly mechanical and the palettes already agree —
-   the site's dark accent *is* the editor's `#7979FF`, nudged, chosen at the time precisely so
-   this step would be cheap.
-2. **Then components.** `EditorButton` should either compose `Button` or share its classes
-   through a `buttonClasses`-style function, following [the pattern that keeps `Button` and
-   `ButtonLink` from drifting](../ui/README.md#variant-or-new-component).
-3. **Then icons.** `ToolIcon` takes image assets; the site uses inline `currentColor` SVG
-   components under `ui/icons/` precisely so they theme themselves. Converting them removes the
-   last thing that would need per-theme handling.
-
-Two constraints not to lose along the way:
-
-- The editor is **full-bleed**, and [the layout hides the site chrome](../../routes/README.md)
-  on `/whiteboard/s` because the editor's own toolbar carries a home button. Adopting the design
-  system must not mean adopting the site nav.
-- Editor surfaces sit **over an arbitrary image**, so they likely need translucent variants. Note
-  that Tailwind 3 silently drops opacity modifiers on `var()` colours — that is why
-  `--bg-translucent` exists rather than `bg-bg/85`, and any new translucent surface needs its own
-  token the same way.
+Left out of the migration on purpose: it is a layout question, and the layout is what
+[the two-image split](#split-the-editor-into-an-input-image-and-an-output-image) is going to
+change. Worth doing after that lands, not before.
 
 ## The remote session client is dead code
 `open` `medium` `src/lib/ImageEditor/WhiteboardSession.ts`
