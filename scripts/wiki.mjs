@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const WIKI = join(ROOT, "wiki");
 
-const STATUSES = ["open", "known", "wontfix", "fixed"];
+const STATUSES = ["open", "planned", "known", "wontfix", "fixed"];
 const SEVERITIES = ["high", "medium", "low"];
 
 // README.md documents its containing directory and issues.md holds that

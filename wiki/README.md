@@ -87,9 +87,13 @@ Prose describing the problem and what fixing it would involve.
 
 The tag line is **status**, then **severity**, then any number of affected source paths.
 
-- **status** — `open` (a defect to fix) · `known` (accepted or intentional behaviour worth
-  knowing) · `wontfix` · `fixed`
+- **status** — `open` (a defect to fix) · `planned` (agreed work that isn't a defect — a feature,
+  a refactor, a redesign) · `known` (accepted or intentional behaviour worth knowing) ·
+  `wontfix` · `fixed`
 - **severity** — `high` · `medium` · `low`
+
+`planned` exists so `--status open` keeps meaning "something is broken". Severity on a `planned`
+entry reads as priority rather than damage.
 
 `fixed` exists so an issue can be marked before it's verified. Delete the entry once verified —
 git remembers.
