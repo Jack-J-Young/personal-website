@@ -1,4 +1,5 @@
 <script lang="ts">
+    import ChordDiagram from "./ChordDiagram.svelte";
     import type { Attempt, DrillChord } from "./practice";
 
     export let target: DrillChord;
@@ -17,6 +18,9 @@
 
     export let streak = 0;
 
+    /** Whether to show where the fingers go. Off by default — see the trainer page. */
+    export let fingering = false;
+
     function seconds(ms: number): string {
         return `${(ms / 1000).toFixed(1)}s`;
     }
@@ -26,14 +30,27 @@
     <div class="pair">
         <!-- Keyed so each new chord is a new node and animates in. Without it Svelte patches the
              text and the prompt changes with no sign that anything happened. -->
-        {#key target.name}
+        {#key target.label}
             <span class="chord now">{target.name}</span>
         {/key}
         <span class="arrow" aria-hidden="true">→</span>
         <span class="chord next">{upcoming.name}</span>
 
-        <span class="label now-label">play</span>
-        <span class="label next-label">then</span>
+        <span class="label now-label">
+            play{#if target.tag}<span class="tag">{target.tag}</span>{/if}
+        </span>
+        <span class="label next-label">
+            then{#if upcoming.tag}<span class="tag">{upcoming.tag}</span>{/if}
+        </span>
+
+        {#if fingering}
+            <div class="fingers now-fingers">
+                <ChordDiagram shape={target.shape} name={target.label} width="6.5rem" />
+            </div>
+            <div class="fingers next-fingers">
+                <ChordDiagram shape={upcoming.shape} name={upcoming.label} width="4.5rem" />
+            </div>
+        {/if}
     </div>
 
     <span class="verdict" class:good={result !== null && !listening && missed === null}>
@@ -43,9 +60,9 @@
             <!-- Reaching the preview before the prompt was heard. Naming it beats reporting a
                  low score against a chord the player has already moved on from, which reads as
                  the tool being broken rather than as being early. -->
-            that was {upcoming.name} — let {target.name} ring first
+            that was {upcoming.label} — let {target.label} ring first
         {:else if missed?.heard}
-            heard {missed.heard.name} · {Math.round(missed.score * 100)}% of a {target.name}
+            heard {missed.heard.name} · {Math.round(missed.score * 100)}% of a {target.label}
         {:else if missed}
             too quiet to name
         {:else if result?.ms != null}
@@ -78,6 +95,31 @@
         align-items: baseline;
         justify-content: center;
         column-gap: 0.75rem;
+    }
+
+    .now,
+    .arrow,
+    .next {
+        grid-row: 1;
+    }
+
+    .label {
+        grid-row: 2;
+    }
+
+    .fingers {
+        grid-row: 3;
+        align-self: start;
+        justify-self: center;
+        padding-top: 0.75rem;
+    }
+
+    .now-fingers {
+        grid-column: 1;
+    }
+
+    .next-fingers {
+        grid-column: 3;
     }
 
     .chord {
@@ -117,6 +159,18 @@
     .label {
         padding-top: 0.375rem;
         opacity: 0.7;
+    }
+
+    /* Full strength inside a dimmed label: "barre" is not decoration on the word "play", it is the
+       part of the prompt that says which of two identical-sounding chords is being asked for. */
+    .tag {
+        color: var(--accent);
+        opacity: 1;
+    }
+
+    .tag::before {
+        content: " · ";
+        color: var(--text-muted);
     }
 
     .now-label {

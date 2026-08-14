@@ -22,6 +22,26 @@ change is what the player actually wants and needs
 [far more evidence per row](README.md#the-two-boards) — fifty-six of them against eight. A draw
 that used the change board early in a session would be chasing single attempts.
 
+## A barre chord cannot be checked, only asked for
+`known` `medium` `src/lib/guitar/practice.ts`
+
+An E-shape barre at the fifth fret and an open A are the same six notes. Nothing in a chroma could
+tell them apart, so the drill accepts an open chord where it asked for a barre one, and the times
+and error rates on the barre set are about the *chord* rather than the shape.
+
+This is a property of listening to pitch, not a bug to be fixed there. A tool that could tell them
+apart would need to hear something other than which notes are sounding — the attack of six strings
+under one finger differs from four strings and two open ones, and so does the sustain — and that
+is a different instrument from the one this is built on.
+
+Recorded rather than solved because the honest response was to say so on the page and pick a
+default that respects it: the set is offered with its diagram, and the page states plainly that
+the barre set is a prompt rather than a check. What would be wrong is presenting a barre time as
+if it had been verified.
+
+The [fingering toggle](README.md#fingering-off-by-default) is the closest thing to a mitigation —
+if you cannot be checked on the shape, at least you can be shown it.
+
 ## Changing early and playing the wrong shape are the same error
 `open` `medium` `src/routes/guitar/trainer/+page.svelte` `src/lib/guitar/practice.ts`
 
@@ -48,24 +68,50 @@ scoreboard survives on screen after a stop, which makes this worse rather than b
 being looked at is about to be discarded, and nothing says so.
 
 Keeping it across a restart is a one-line change. Keeping it across a *visit* is the question
-worth answering first, and it is the same question as
-[the sensitivity slider's](#sensitivity-is-not-remembered-between-visits) — both want somewhere to
-put per-user practice state, and inventing that twice would be a mistake.
+worth answering first, and it is a bigger one than
+[the sliders'](README.md#settings-that-survive-a-reload): a setting is one number that the newest
+value always wins, and a session is a growing list where the interesting question — is this chord
+getting faster — needs the old ones kept and dated.
 
-## Sensitivity is not remembered between visits
+## The toggles are not remembered, only the sliders are
+`open` `low` `src/routes/guitar/trainer/+page.svelte` `src/lib/guitar/settings.ts`
+
+[`settings.ts`](README.md#settings-that-survive-a-reload) remembers sensitivity and acceptance. The
+trainer's three switches — the chord sets, the fingering toggle and the sound toggle — still reset
+on every load.
+
+The sets are the worst of them: every visit starts on the open chords, which is exactly wrong for
+someone who came back to drill barre chords. Sound is a close second, since a setting whose whole
+purpose is "not right now, I am in a shared room" is the one most annoying to reset.
+
+What is left is genuinely small — the machinery exists, and the only reason `remembered` did not
+cover these too is that it stores a number and these are a list of strings and two booleans. A
+second constructor beside it is a few lines.
+
+## The sensitivity slider is still a guess
 `planned` `low` `src/lib/guitar/Sensitivity.svelte` `src/lib/guitar/sensitivity.ts`
 
-The slider starts at the default every time a page is loaded, so anyone whose setup needs a
-different value has to set it again on each visit — now on two pages rather than one.
+Persisting it removed the daily annoyance but not the underlying one: the player still has to
+find a good value by moving a slider and watching a dashed band, once.
 
-`src/lib/theme.ts` already establishes the pattern: a store initialised from `localStorage` behind
-a browser check. The reason it is not done yet is that the right thing to remember may not be the
-slider position. A "listen for a few seconds and set it from what you played" button would set it
-better than the user can, and would make persistence a detail rather than the feature.
+A "listen for a few seconds and set it from what you played" button would set it better than they
+can, and would turn the slider into a fallback rather than the interface. The same argument does
+not apply to [acceptance](README.md#acceptance-is-a-control-for-the-same-reason-sensitivity-is),
+which is a judgement about how strict to be rather than a measurement.
 
-The trainer's sound toggle has the same gap and no such excuse — a setting whose whole purpose is
-"not right now, I am in a shared room" is the one most annoying to reset on every visit. It is
-listed here rather than separately because both want the same piece of machinery.
+## Every chord has one fingering
+`planned` `low` `src/lib/guitar/shapes.ts` `src/lib/guitar/practice.ts`
+
+`DrillChord` carries a single `ChordShape`, so the diagram shows one way of playing each chord.
+Several of them have more than one worth knowing — G with the ring and little fingers on the top
+two strings, C as an A-shape barre at the third fret, Dm without the barre — and the diagram
+currently asserts one of them by omission.
+
+The type is ready for it: nothing about `ChordShape`, `fretWindow` or `barresOf` cares how many
+there are, and a `shapes: ChordShape[]` with the first as the default is a small change. What is
+not decided is the interface. Alternatives are only useful if they can be *chosen*, and a picker
+inside the prompt is the last place a control should go — the prompt is what the player is looking
+at while their hands are busy.
 
 ## Nothing tells you the chime is why a fast change did not register
 `open` `low` `src/routes/guitar/trainer/+page.svelte` `src/lib/guitar/chime.ts`

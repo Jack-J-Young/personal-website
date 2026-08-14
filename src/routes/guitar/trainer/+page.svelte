@@ -7,22 +7,26 @@
     import Section from "$lib/ui/Section.svelte";
     import Stack from "$lib/ui/Stack.svelte";
     import Text from "$lib/ui/Text.svelte";
+    import Acceptance from "$lib/guitar/Acceptance.svelte";
     import ChordPrompt from "$lib/guitar/ChordPrompt.svelte";
+    import ChordSets from "$lib/guitar/ChordSets.svelte";
     import MicrophoneGate from "$lib/guitar/MicrophoneGate.svelte";
     import ScoreBoard from "$lib/guitar/ScoreBoard.svelte";
     import Sensitivity from "$lib/guitar/Sensitivity.svelte";
     import Timeline from "$lib/guitar/Timeline.svelte";
     import {
-        BEGINNER_CHORDS,
-        LEAD_SCORE,
+        DEFAULT_SETS,
+        chordsIn,
         judgeAttempt,
+        leadBarFor,
         pickNext,
         type Attempt,
         type DrillChord,
         type Strum,
     } from "$lib/guitar/practice";
     import { CHIME_MS, startChimes, type Chimes } from "$lib/guitar/chime";
-    import { DEFAULT_SENSITIVITY, attackLevelFor, windowLevelFor } from "$lib/guitar/sensitivity";
+    import { attackLevelFor, windowLevelFor } from "$lib/guitar/sensitivity";
+    import { acceptance, sensitivity } from "$lib/guitar/settings";
     import { withinSpan, type LevelSample, type TimelineMark } from "$lib/guitar/timeline";
     import {
         OnsetDetector,
@@ -40,20 +44,26 @@
     const ENVELOPE_SECONDS = 0.05;
     const TIMELINE_SPAN_MS = 6000;
 
-    let sensitivity = DEFAULT_SENSITIVITY;
     let detector = new OnsetDetector();
 
-    $: attackLevel = attackLevelFor(sensitivity);
+    $: leadBar = leadBarFor($acceptance);
+
+    $: attackLevel = attackLevelFor($sensitivity);
     $: detector.floor = attackLevel;
-    $: minLevel = windowLevelFor(sensitivity);
+    $: minLevel = windowLevelFor($sensitivity);
 
     let trace: LevelSample[] = [];
     let marks: TimelineMark[] = [];
     let clock = 0;
     let gathering: number | null = null;
 
-    let target: DrillChord = BEGINNER_CHORDS[0];
-    let upcoming: DrillChord = BEGINNER_CHORDS[1];
+    // Recomputed by `retarget` rather than reactively, because the first prompt is drawn from it
+    // in this same block and a `$:` has not run by then.
+    let sets = DEFAULT_SETS;
+    let pool = chordsIn(sets);
+
+    let target: DrillChord = pool[0];
+    let upcoming: DrillChord = pool[1];
     let strums = 0;
     let missed: Attempt | null = null;
     let result: { chord: string; ms: number | null } | null = null;
@@ -74,6 +84,7 @@
     $: timed = history.filter((strum) => strum.ms !== null).length;
 
     let sound = true;
+    let fingering = false;
     let chimes: Chimes | null = null;
 
     /**
@@ -95,8 +106,20 @@
         deafUntil = 0;
         chimes = startChimes();
 
-        upcoming = pickNext(BEGINNER_CHORDS, null);
+        upcoming = pickNext(pool, null);
         advance();
+    }
+
+    /**
+     * Ticking a set mid-session can leave a prompt from one that was just unticked. Only the
+     * chords that fell out of the pool are redrawn: asking for a chord the player has just said
+     * they don't want is the one thing the control must not do, and redrawing a preview that is
+     * still valid would break the promise that the preview is what arrives next.
+     */
+    function retarget() {
+        pool = chordsIn(sets);
+        if (!pool.includes(upcoming)) upcoming = pickNext(pool, target);
+        if (!pool.includes(target)) advance();
     }
 
     function announce(landed: boolean) {
@@ -111,7 +134,7 @@
     /** Promotes the preview to the prompt and draws a new one behind it. */
     function advance() {
         target = upcoming;
-        upcoming = pickNext(BEGINNER_CHORDS, target);
+        upcoming = pickNext(pool, target);
         strums = 0;
         missed = null;
     }
@@ -167,8 +190,11 @@
         let chroma = foldToChroma(energies);
 
         let best = matchChords(chroma, { bass: bassPitchClass(energies) })[0] ?? null;
-        let recognisable = best && best.score >= LEAD_SCORE ? best : null;
-        let attempt = judgeAttempt(target, chroma, recognisable);
+        // The same bar decides whether the recogniser will name a strum at all. Leaving it fixed
+        // while acceptance moved would give a quiet player "too quiet to name" in place of the
+        // verdict they had just asked for.
+        let recognisable = best && best.score >= leadBar ? best : null;
+        let attempt = judgeAttempt(target, chroma, recognisable, $acceptance);
 
         let name = recognisable?.name ?? null;
         marks = marks.map((mark) => (mark.time === onset ? { ...mark, label: name } : mark));
@@ -178,7 +204,7 @@
         // short to identify is evidence about the playing, not about the chord.
         if (recognisable !== null) {
             history = [...history, {
-                chord: target.name,
+                chord: target.label,
                 from: previous?.chord ?? null,
                 ms: attempt.accepted && previous !== null ? onset - previous.onset : null,
                 landed: attempt.accepted,
@@ -191,8 +217,8 @@
             return;
         }
 
-        result = { chord: target.name, ms: previous === null ? null : onset - previous.onset };
-        previous = { chord: target.name, onset };
+        result = { chord: target.label, ms: previous === null ? null : onset - previous.onset };
+        previous = { chord: target.label, onset };
 
         // Counting only the chords found first time: a streak that survives any number of wrong
         // strums is just a count of prompts, and measures nothing.
@@ -231,13 +257,15 @@
                 <Eyebrow>Tool</Eyebrow>
                 <Heading level={1}>Chord trainer</Heading>
                 <Text size="lg" muted>
-                    It asks for one of the eight open chords and shows you the one after it, so
-                    what you are practising is the change rather than the chord. A rising chime
-                    means it landed and a falling one means it didn't, so you can keep your eyes
-                    on the fretboard. Each change is timed from strum to strum, and the table at
-                    the bottom says which ones are holding you up.
+                    It asks for a chord and shows you the one after it, so what you are practising
+                    is the change rather than the chord. A rising chime means it landed and a
+                    falling one means it didn't, so you can keep your eyes on the fretboard. Each
+                    change is timed from strum to strum, and the table at the bottom says which
+                    ones are holding you up.
                 </Text>
             </Stack>
+
+            <ChordSets bind:selected={sets} changed={retarget} />
 
             <MicrophoneGate
                 maxBinWidth={MAX_BIN_WIDTH}
@@ -252,10 +280,17 @@
                         {result}
                         {missed}
                         {streak}
+                        {fingering}
                         listening={gathering !== null} />
 
                     <div class="controls">
                         <Button variant="ghost" size="sm" on:click={skip}>Skip this one</Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            on:click={() => (fingering = !fingering)}>
+                            Fingering: {fingering ? "on" : "off"}
+                        </Button>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -272,7 +307,8 @@
                             spanMs={TIMELINE_SPAN_MS}
                             pending={gathering}
                             threshold={attackLevel} />
-                        <Sensitivity bind:value={sensitivity} />
+                        <Sensitivity bind:value={$sensitivity} />
+                        <Acceptance bind:value={$acceptance} />
                     </div>
                 </div>
             </MicrophoneGate>
@@ -301,12 +337,45 @@
 
     <Section space="tight">
         <Stack gap="sm">
+            <Heading level={2} size="sm">What it can and cannot check</Heading>
+            <Text muted>
+                <strong>It hears chords, not hands.</strong> An E-shape barre at the fifth fret and
+                an open A are the same six notes, so nothing in the audio could tell them apart —
+                asked for a barre chord, you can play the open one and it will pass. The barre set
+                is a prompt and a diagram, not a check. Ticking it alongside the open chords is
+                still the useful thing to do, because G&nbsp;→&nbsp;Bm is the change that stops
+                people and it does not exist inside either set on its own.
+            </Text>
+            <Text muted>
+                Power chords go the other way and are checked properly. A D5 is two of the three
+                notes in a D, so a full D scores about 81% against it — under the 85% bar, since
+                the D wins the ranking outright. Asked for D5 and handed a D, it says no.
+            </Text>
+            <Text muted>
+                <strong>Fingering is off by default</strong>, and that is the point: a diagram
+                under every prompt turns the drill into copying, and the times stop measuring
+                whether you remember the shape. Turn it on when a barre chord is new, off once it
+                isn't.
+            </Text>
+        </Stack>
+    </Section>
+
+    <Section space="tight">
+        <Stack gap="sm">
             <Heading level={2} size="sm">What counts as playing it</Heading>
             <Text muted>
-                A strum passes if the chord asked for scores at least 85%, or at least 70% when it
-                is also the best match found. Two bars rather than one, because coming first is
-                itself evidence: a chord that won only has to be plausible, and one that came
-                second has to be convincing on its own.
+                A strum passes if the chord asked for scores at least {Math.round($acceptance * 100)}%,
+                or at least {Math.round(leadBar * 100)}% when it is also the best match found. Two
+                bars rather than one, because coming first is itself evidence: a chord that won
+                only has to be plausible, and one that came second has to be convincing on its own.
+            </Text>
+            <Text muted>
+                The acceptance slider moves both — a quiet guitar, a laptop microphone across the
+                room, or a room with something else going on in it all cost a few percent, and a
+                tool that fails chords you know you played is worse than one set a little loose.
+                One control rather than two, because the second bar follows the first: the two are
+                the same question asked of different evidence, and reconciling two confidence
+                sliders is not a job to hand anyone.
             </Text>
             <Text muted>
                 The point of the second bar is that a chord can be played and still lose. A major
@@ -317,8 +386,11 @@
             </Text>
             <Text muted>
                 It is not generous about the third being wrong rather than quiet. An Am scored
-                against A reaches about 69%, nowhere near either bar, which is the mistake a drill
-                exists to catch.
+                against A reaches about 69%, which is the mistake a drill exists to catch — and it
+                is also where the slider stops being forgiving and starts being wrong. Below 70%
+                that mistake begins to pass. The slider goes there anyway, because a bad microphone
+                is a real problem and you know what you played, but the number turns amber when it
+                does.
             </Text>
         </Stack>
     </Section>

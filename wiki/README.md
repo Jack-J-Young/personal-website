@@ -41,13 +41,25 @@ Dependencies of note: `bits-ui` (`Separator`, `AspectRatio`), `svelte-gestures` 
 ## Commands
 
 ```bash
-npm run dev       # vite dev server
-npm run dev:lan   # the same, over HTTPS on the network — for testing on a phone or tablet
-npm run build     # static build into build/
-npm run preview   # serve the build
-npm run check     # svelte-kit sync && svelte-check
-npm test          # vitest run
+npm run dev                  # vite dev server
+npm run dev -- --no-reload   # the same, but a save does not touch the open page
+npm run dev:lan              # over HTTPS on the network — for testing on a phone or tablet
+npm run build                # static build into build/
+npm run preview              # serve the build
+npm run check                # svelte-kit sync && svelte-check
+npm test                     # vitest run
 ```
+
+**`--no-reload` is for the guitar tools.** Hot reloading is the right default until the page is
+holding state that took effort to reach — a microphone permission and a running practice session —
+and then every save throws both away. The flag turns Vite's HMR off, so a save still rebuilds and
+the browser simply is not told; refresh when you want the change.
+
+It goes through [`scripts/dev.mjs`](../scripts/dev.mjs) rather than straight to Vite, because Vite's CLI
+rejects options it does not recognise: it reads `--no-reload` as the negation of a `--reload` it
+has never heard of and exits. The wrapper takes that one flag out, passes it on as an environment
+variable that `vite.config.ts` reads, and forwards everything else untouched — `--host`, `--port`
+and `--mode lan` all still work.
 
 **`dev:lan` exists because of the microphone.** A browser only offers one to a secure context —
 HTTPS, or one of the loopback hosts — so a tablet loading `http://192.168.x.x:5173` cannot open

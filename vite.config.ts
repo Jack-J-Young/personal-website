@@ -14,6 +14,20 @@ import { defineConfig } from 'vitest/config';
  * an interstitial before the page loads, which is not worth paying for on the machine running the
  * server.
  */
+/**
+ * `npm run dev -- --no-reload` leaves the page alone when a file changes.
+ *
+ * Hot reloading is the right default and wrong in one situation: anything holding state that took
+ * effort to reach. The guitar tools take a microphone permission and a running session to get to,
+ * and a save while looking at a scoreboard throws both away — which is most of the time while
+ * working on them.
+ *
+ * An environment variable rather than a mode, because a mode is a build input and this is not: it
+ * changes nothing about what is served, only whether the browser is told. `scripts/dev.mjs` sets
+ * it, and says there why the flag cannot simply be read from `argv` here.
+ */
+const HMR_OFF = !!process.env.VITE_NO_RELOAD;
+
 export default defineConfig(({ mode }) => {
 	let lan = mode === 'lan';
 
@@ -29,7 +43,13 @@ export default defineConfig(({ mode }) => {
 		 * key including symbols and throws on the first one it cannot read as a string. Every
 		 * request 500s with "init.headers is a symbol".
 		 */
-		server: lan ? { proxy: {} } : undefined,
+		server: {
+			...(lan ? { proxy: {} } : {}),
+
+			// False rather than a slower poll: the point is that nothing arrives, not that less
+			// does. Vite still rebuilds on save, so a manual refresh picks the change up.
+			...(HMR_OFF ? { hmr: false as const } : {})
+		},
 
 		test: {
 			include: ['src/**/*.test.ts']

@@ -18,9 +18,14 @@ They are built from [the design system](../ui/README.md) and own no colours beyo
 | `ChromaBars.svelte` | Twelve bars showing what the chord recogniser actually heard. |
 | `Timeline.svelte` | The scrolling loudness trace, with a tag on each strum. |
 | `Sensitivity.svelte` | The slider that sets how loud a strum has to be to count. |
+| `Acceptance.svelte` | The slider that sets how *close* a strum has to be to count. |
 | `ChordPrompt.svelte` | The trainer's face: the chord to play, the one after it, the time, and the streak. |
+| `ChordDiagram.svelte` | A chord box — six strings, four frets, dots where the fingers go. |
+| `ChordSets.svelte` | The tick boxes that decide which chords the drill draws from. |
 | `ScoreBoard.svelte` | The session's numbers, by chord or by change, sorted on whichever column was clicked. |
 | `practice.ts` | The drill: which chords, which one next, whether a strum counts, and what the session adds up to. |
+| `shapes.ts` | What a fingering is, and the two things a diagram needs worked out from it. |
+| `settings.ts` | The two sliders, as stores that survive a reload. |
 | `chime.ts` | The two feedback tones. Impure — it owns an `AudioContext`. |
 | `timeline.ts` | The shapes the timeline is drawn from, and the trim that drops what has scrolled off. |
 | `sensitivity.ts` | Slider position → the loudness a strum has to reach. |
@@ -143,8 +148,8 @@ Two bars, not one:
 
 | | The prompted chord must reach |
 |---|---|
-| It was also the best match found | `LEAD_SCORE`, 0.70 |
-| Something else matched better | `CLEAR_SCORE`, 0.85 |
+| It was also the best match found | `leadBarFor(acceptance)`, 0.70 by default |
+| Something else matched better | `acceptance`, `DEFAULT_ACCEPTANCE` of 0.85 |
 
 Coming first is itself evidence, so a chord that won only has to be plausible while one that came
 second has to be convincing on its own.
@@ -160,15 +165,86 @@ wrong one. [The numbers](../audio/README.md#asking-about-one-chord--scorechord) 
 at 0.88, no third at 0.85, and the minor sharing the same root at 0.69 — so 0.85 amounts to
 "the third was audible", and the mistake a drill exists to catch is nowhere near it.
 
+### Acceptance is a control, for the same reason sensitivity is
+
+A score is not only a fact about the playing. A quiet guitar, a laptop microphone across the room,
+or a room with something else going on in it all cost a few percent, and **a tool that fails
+chords the player knows they played is worse than one set slightly loose** — it teaches them to
+distrust it, which is the end of its usefulness.
+
+So `judgeAttempt` takes the bar as a parameter and the page owns the slider. Two things fall out of
+that, and both are the reason it is worth writing down:
+
+**One control, not two.** `leadBarFor` derives the winner's bar by subtracting a fixed 0.15, so the
+default is exactly the 0.85 / 0.70 pair it always was. The two bars are the same question asked of
+different evidence; exposing both would be handing the player the job of keeping them consistent —
+the same argument that keeps `windowLevelFor` derived from `attackLevelFor` in
+[sensitivity](#sensitivity).
+
+**The floor is where leniency turns into being wrong.** A minor scored against the major sharing
+its root reaches 0.69, so under about 0.7 the drill starts accepting the one mistake it exists to
+catch. The slider goes to 0.6 anyway — the player knows what they played and a bad microphone is a
+real problem — but the readout turns `--caution` amber below 0.7 and the hint says what is being
+given up. A limit with no reason attached is just an obstacle.
+
+The same bar decides whether the recogniser [names a strum at all](#the-times). Leaving that fixed
+while acceptance moved would hand a quiet player "too quiet to name" in place of the verdict they
+had just lowered the bar to get.
+
+One thing it does not do is re-judge history. A strum was accepted or refused under the bar in
+force at the time, and moving the slider does not go back and change the scoreboard — which is
+honest, and also means a session with the slider moved half way through is two sessions in one
+table. That is worth knowing before reading much into it.
+
 ### The chords, and which one comes next
 
-`BEGINNER_CHORDS` is eight open chords: C, D, E, G, A, Em, Am and Dm. The recogniser knows a
-hundred and twenty, and offering them would make the tool worse — a drill is only worth doing if
-every prompt is something you can nearly play already.
+Three sets, ticked in any combination, drawn from together:
+
+| Set | | |
+|---|---|---|
+| Open | 8 | C, D, E, G, A, Em, Am, Dm |
+| Barre | 7 | F, F♯m, G, Bm, B, C♯m, Dm — E, Em and Am shapes moved up the neck |
+| Power | 7 | E5 through D5, rooted on the low E and A strings |
+
+Still far short of the hundred and twenty the recogniser knows, for the same reason as before: a
+drill is only worth doing if every prompt is something you can nearly play already, and being
+asked for F♯m7 in the first week is a way of being told to stop.
+
+**Combinable rather than exclusive, because the interesting change crosses the sets.** G→Bm is the
+one that stops people and it does not exist inside either set on its own.
+
+### The name is not the chord
+
+A barre G and an open G are the same six notes. Nothing in the audio could distinguish them, so a
+`DrillChord` carries three strings rather than one:
+
+| | |
+|---|---|
+| `name` | What the recogniser calls it, and the only thing a strum is judged against |
+| `tag` | `"barre"` where the name does not say which hand is meant, null otherwise |
+| `label` | `name` plus `tag`, unique across every set — what the prompt shows and the board groups by |
+
+Without the label the scoreboard would average an open G with a barre G into one row, which is two
+different things to practise reported as one.
+
+Power chords need no tag: `chordName` already writes them E5 and A5, so nothing they contain can
+collide.
+
+**What the tool cannot do follows from the same fact.** Asked for a barre chord you can play the
+open one and it will pass — [the barre set is a prompt, not a check](issues.md#a-barre-chord-cannot-be-checked-only-asked-for).
+Power chords go the other way and *are* checked: a D5 is two of the three notes in a D, so a full
+D scores about 0.81 against the D5 template while losing the ranking to D itself — which puts it
+on the 0.85 bar, just under. The two-bar rule handles it with no special case.
+
+### Which one comes next
 
 `pickNext` never repeats the chord just asked for, because a change from a chord to itself is not
 a change and takes no time. It takes its random source as a parameter, which is what makes that
 property testable rather than a matter of running it a few times and hoping.
+
+**Excluded by name, not by identity.** An open G into a barre G is a real thing to practise and
+not a thing this can measure: the second strum would be accepted for sounding like the first, and
+the time would be a number about nothing.
 
 It is otherwise uniform, and [it should not be](issues.md#the-drill-does-not-choose-what-to-drill).
 
@@ -263,6 +339,60 @@ sits there unchanged. The tool's answer is to make the wait audible — the chim
 move — which turns the limit into the instruction "let it ring", and letting a chord ring while
 your hand moves is the thing worth practising anyway.
 
+## Shapes and diagrams
+
+`shapes.ts` is a `ChordShape` — a fret and a finger for each of the six strings, low E first — and
+two things derived from it. Nothing else is stored, because everything else about a diagram
+follows from those twelve numbers.
+
+**Frets are absolute.** An A-shape barre at the fifth fret says 5, not 1, and `fretWindow` works
+out where the diagram starts. Recording an offset alongside relative frets would be two facts that
+have to agree, and the failure when they don't is a diagram that looks right and teaches the wrong
+shape.
+
+`fretWindow` starts at the nut for anything within reach of it, because "third fret" means nothing
+to a hand that cannot see where the neck begins. Only once a shape is out of that reach does the
+diagram slide up and say where it went — which is the `5fr` in the corner. It also *grows* rather
+than clips: a shape spanning five frets gets five rows.
+
+`barresOf` derives the bars from the fingering. A barre **is** one finger on several strings at one
+fret — there is nothing else it could be — so recording it separately would be a second copy of a
+fact already written down, free to disagree with the first. It bars only the strings at that
+finger's own fret, which matters for the A-shape major: the index finger lies across the second
+fret while three fingers sit at the fourth, and reading the fingering without the fret would put
+all five strings in the bar.
+
+`ChordDiagram.svelte` draws it in abstract SVG units scaled by a `width` prop. Three details are
+load-bearing:
+
+- **The nut is drawn thick when the window starts at it.** It is the one line that is a fact about
+  the guitar rather than a fret, and the diagram is unreadable without knowing whether the top line
+  is it.
+- **The fret number sits in a gutter to the left of the nut**, at full-strength `--text`. It was
+  first drawn to the right of the first fret row, which is exactly where a barre chord draws its
+  bar — so the one shape whose fret number matters most had it printed on top of the bar. There is
+  nothing on the left of the neck to collide with. It is anchored at the very left edge rather than
+  against the nut, so if a two-digit fret ever runs out of room it is the "fr" that goes and not
+  the number.
+- **The gutter is kept whether or not a number goes in it**, so diagrams of chords at different
+  places on the neck are the same shape and can sit side by side.
+
+Where on the neck a shape goes is not an annotation on the diagram — without it the diagram is of
+the wrong chord — which is why it is neither muted nor small.
+
+Finger numbers go inside the dots, and on a bar there is one number at its centre rather than one
+per string. The difference between "put something here" and "put *this* finger here" is most of
+what a barre chord diagram is for.
+
+## ChordSets
+
+Three tick boxes. **Unticking the last set is refused rather than disabled**, because a disabled
+box gives no reason and this one has an obvious one: the drill has to be asking for something.
+
+Changing the selection mid-session redraws only what fell out of the pool. Asking for a chord the
+player has just said they don't want is the one thing the control must not do; redrawing a preview
+that is still valid would break [the promise](#the-preview) that the preview is what arrives next.
+
 ## ChordPrompt
 
 ### The preview
@@ -293,6 +423,19 @@ Reaching the *preview* early is called out by name — "that was G — let Am ri
 than reported as a low score against the chord still being asked for. Both are true, but a player
 who has already moved on reads "27% of an Am" as the tool being broken rather than as being early,
 and being early is the single most likely mistake once a preview exists.
+
+### Fingering, off by default
+
+The diagrams appear under both chords when the toggle is on, and the toggle starts off. That is
+the whole design decision: **a diagram under every prompt turns the drill into copying**, and the
+times stop measuring whether the shape is remembered — which is the only thing they were measuring.
+
+Both chords get one rather than only the current one, because the preview exists so the *change*
+can be prepared, and a shape you cannot see is not one you can prepare.
+
+The tag — "barre" — renders at full strength inside an otherwise dimmed label. It is not decoration
+on the word "play": it is the part of the prompt that says which of two identical-sounding chords
+is being asked for.
 
 **The streak counts only chords found on the first strum.** A streak that survives any number of
 wrong attempts is just a count of prompts and measures nothing. Wrong strums are otherwise free —
@@ -354,6 +497,25 @@ columns that reflow every time a header is clicked look broken, and the fix cost
 
 The panel scrolls sideways rather than dropping a column on a narrow screen. Every one of the six
 is a number somebody asked for, and there is no honest way to pick which phone users don't need.
+
+## Settings that survive a reload
+
+`settings.ts` holds the two sliders as stores backed by `localStorage`. They are the two settings
+that are **about the room rather than the playing** — how loud a strum arrives and how close the
+recogniser gets — and a microphone and a guitar do not change between visits. Asking on every load
+is asking the same question over and over and ignoring the answer.
+
+Stores rather than props, because the sensitivity slider appears on both listening pages and a
+setting that meant different things on each would be worse than no setting at all. That is the
+same argument that put the mapping in `sensitivity.ts` in the first place.
+
+**A stored value is clamped, not trusted.** The ranges are ours and may change, and a value saved
+under an older one would otherwise come back as a setting the slider cannot express — a control
+that appears to do nothing until it is moved. Anything unreadable falls back to the default, and
+the fallback is written back, so junk in storage cleans itself up.
+
+Writes are wrapped, so private browsing and blocked storage still get working sliders. They just
+do not survive a reload, which is where they were before this existed.
 
 ## Sensitivity
 

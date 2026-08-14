@@ -35,6 +35,7 @@
 
 	--in-tune: #157f3c;
 	--out-of-tune: #b5651d;
+	--caution: #9a5416;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,6 +58,7 @@
 
 		--in-tune: #3ddc84;
 		--out-of-tune: #f0a340;
+		--caution: #f0a340;
 	}
 }
 
@@ -79,6 +81,7 @@
 
 	--in-tune: #3ddc84;
 	--out-of-tune: #f0a340;
+	--caution: #f0a340;
 }
 
 /* Overlay affordances drawn on top of the user's photograph. They cannot be theme colours:

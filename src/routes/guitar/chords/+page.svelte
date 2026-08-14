@@ -9,7 +9,8 @@
     import MicrophoneGate from "$lib/guitar/MicrophoneGate.svelte";
     import Sensitivity from "$lib/guitar/Sensitivity.svelte";
     import Timeline from "$lib/guitar/Timeline.svelte";
-    import { DEFAULT_SENSITIVITY, attackLevelFor, windowLevelFor } from "$lib/guitar/sensitivity";
+    import { attackLevelFor, windowLevelFor } from "$lib/guitar/sensitivity";
+    import { sensitivity } from "$lib/guitar/settings";
     import { withinSpan, type LevelSample, type TimelineMark } from "$lib/guitar/timeline";
     import {
         OnsetDetector,
@@ -45,12 +46,11 @@
     /** Long enough to hold a few chord changes, so a run of them can be looked at together. */
     const TIMELINE_SPAN_MS = 6000;
 
-    let sensitivity = DEFAULT_SENSITIVITY;
     let detector = new OnsetDetector();
 
-    $: attackLevel = attackLevelFor(sensitivity);
+    $: attackLevel = attackLevelFor($sensitivity);
     $: detector.floor = attackLevel;
-    $: minLevel = windowLevelFor(sensitivity);
+    $: minLevel = windowLevelFor($sensitivity);
 
     let trace: LevelSample[] = [];
     let marks: TimelineMark[] = [];
@@ -174,7 +174,7 @@
                             spanMs={TIMELINE_SPAN_MS}
                             pending={gathering}
                             threshold={attackLevel} />
-                        <Sensitivity bind:value={sensitivity} />
+                        <Sensitivity bind:value={$sensitivity} />
                     </div>
 
                     <ChromaBars {chroma} {highlight} />

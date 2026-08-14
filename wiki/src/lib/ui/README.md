@@ -35,14 +35,19 @@ Two more exist for the [editor](../ImageEditor/README.md), which has needs no pa
 | `--editor-canvas` | The backdrop *behind* the user's photograph. A surface colour is too close to a near-white processed image to read against, so it is deliberately darker than `--surface-raised` in light and darker than `--bg` in dark. |
 | `--overlay-scrim` | The translucent wash under the loading state. Tailwind 3 drops opacity modifiers on `var()` colours, so this cannot be `bg-bg/72`. |
 
-Two more exist for the [guitar tools](../guitar/README.md):
+Three more exist for the [guitar tools](../guitar/README.md):
 
 | Token | Why it isn't an existing one |
 |---|---|
 | `--in-tune` | A tuner has to say "yes, that one" in a way the accent colour cannot — the accent already means "interactive" everywhere else on the site. |
 | `--out-of-tune` | Amber rather than red. Being out of tune is the normal state while tuning, not an error, and red would make the tool feel like it was scolding you. |
+| `--caution` | A setting that has been moved somewhere it will misbehave. The same amber, for the same reason it is amber, but it is not about tuning and a token named for the tuner would be the wrong thing to reach for from anywhere else. |
 
-Both are darkened in light mode for contrast on white, the same way the accent is.
+`--caution` and `--out-of-tune` hold the same value in dark and differ only in light, where the
+caution amber is darker still — it carries small body text, which the tuner's readout does not.
+**If a fourth amber is ever wanted, it is one of these two**, not a new one.
+
+All three are darkened in light mode for contrast on white, the same way the accent is.
 
 And two that are **not** themed at all, declared once in a separate `:root` block:
 

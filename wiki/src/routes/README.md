@@ -12,7 +12,7 @@ these are client-rendered unless a route opts into prerendering.
 | `/guitar` | `guitar/+page.svelte` | Landing page for the guitar tools. |
 | `/guitar/tuner` | `guitar/tuner/+page.svelte` | Chromatic tuner. See [audio](../lib/audio/README.md) and [guitar](../lib/guitar/README.md). |
 | `/guitar/chords` | `guitar/chords/+page.svelte` | Chord recogniser. |
-| `/guitar/trainer` | `guitar/trainer/+page.svelte` | Practice drill. Prompts a chord, previews the next, times the change between them, and scores the session [by chord or by change](../lib/guitar/README.md#the-two-boards). See [practice](../lib/guitar/README.md#practice). |
+| `/guitar/trainer` | `guitar/trainer/+page.svelte` | Practice drill. Prompts a chord from the ticked [sets](../lib/guitar/README.md#the-chords-and-which-one-comes-next), previews the next, times the change between them, and scores the session [by chord or by change](../lib/guitar/README.md#the-two-boards). See [practice](../lib/guitar/README.md#practice). |
 
 [Issues](issues.md)
 
