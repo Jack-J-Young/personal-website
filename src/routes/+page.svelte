@@ -50,6 +50,19 @@
                     </div>
                 </Card>
             </a>
+
+            <a href="/guitar" class="block rounded-lg">
+                <Card interactive>
+                    <div class="flex flex-col gap-3">
+                        <Heading level={2} size="md">Guitar tools</Heading>
+                        <Text muted>
+                            A tuner and a chord recogniser that run on your own microphone, on the
+                            way to a trainer that times your chord changes and drills the slow ones.
+                        </Text>
+                        <span class="font-mono text-sm text-accent">Try it &rarr;</span>
+                    </div>
+                </Card>
+            </a>
         </Stack>
     </Section>
 </Container>

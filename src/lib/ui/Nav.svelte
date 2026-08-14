@@ -14,6 +14,7 @@
 
             <div class="flex flex-1 items-center gap-1">
                 <NavLink href="/whiteboard">Whiteboard</NavLink>
+                <NavLink href="/guitar">Guitar</NavLink>
                 <NavLink href="/about">About</NavLink>
             </div>
 

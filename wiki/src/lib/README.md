@@ -8,6 +8,9 @@ Shared code, reachable via the `$lib` alias.
   the interesting code in this repo.
 - [whiteboard/](whiteboard/README.md) — the image processing pipeline itself, ported from the
   hosted API and now running in the browser. Pure functions, no DOM.
+- [audio/](audio/README.md) — pitch and chord detection from a microphone. Pure functions apart
+  from the one module that opens the device.
+- [guitar/](guitar/README.md) — the components the guitar tools are drawn with.
 
 ## theme.ts
 

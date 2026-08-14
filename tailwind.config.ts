@@ -20,6 +20,8 @@ export default {
         "accent-hover": "var(--accent-hover)",
         "accent-contrast": "var(--accent-contrast)",
         "accent-subtle": "var(--accent-subtle)",
+        "in-tune": "var(--in-tune)",
+        "out-of-tune": "var(--out-of-tune)",
       },
       borderRadius: {
         sm: "var(--radius-sm)",

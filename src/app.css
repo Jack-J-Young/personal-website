@@ -32,6 +32,9 @@
 
 	--editor-canvas: #e4e6ec;
 	--overlay-scrim: rgba(251, 251, 253, 0.72);
+
+	--in-tune: #157f3c;
+	--out-of-tune: #b5651d;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,6 +54,9 @@
 
 		--editor-canvas: #08090c;
 		--overlay-scrim: rgba(14, 15, 19, 0.72);
+
+		--in-tune: #3ddc84;
+		--out-of-tune: #f0a340;
 	}
 }
 
@@ -70,6 +76,9 @@
 
 	--editor-canvas: #08090c;
 	--overlay-scrim: rgba(14, 15, 19, 0.72);
+
+	--in-tune: #3ddc84;
+	--out-of-tune: #f0a340;
 }
 
 /* Overlay affordances drawn on top of the user's photograph. They cannot be theme colours:

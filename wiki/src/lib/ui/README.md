@@ -35,6 +35,15 @@ Two more exist for the [editor](../ImageEditor/README.md), which has needs no pa
 | `--editor-canvas` | The backdrop *behind* the user's photograph. A surface colour is too close to a near-white processed image to read against, so it is deliberately darker than `--surface-raised` in light and darker than `--bg` in dark. |
 | `--overlay-scrim` | The translucent wash under the loading state. Tailwind 3 drops opacity modifiers on `var()` colours, so this cannot be `bg-bg/72`. |
 
+Two more exist for the [guitar tools](../guitar/README.md):
+
+| Token | Why it isn't an existing one |
+|---|---|
+| `--in-tune` | A tuner has to say "yes, that one" in a way the accent colour cannot — the accent already means "interactive" everywhere else on the site. |
+| `--out-of-tune` | Amber rather than red. Being out of tune is the normal state while tuning, not an error, and red would make the tool feel like it was scolding you. |
+
+Both are darkened in light mode for contrast on white, the same way the accent is.
+
 And two that are **not** themed at all, declared once in a separate `:root` block:
 
 ```css

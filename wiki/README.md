@@ -1,13 +1,17 @@
 # personal-website wiki
 
-Documentation for [jackyoung.xyz](https://jackyoung.xyz) — a personal site whose one real
-feature is the **Whiteboard processor**: upload a photo of a whiteboard or page, optionally mark
-4 corners for a perspective transform, tweak processing options, and download a cleaned image.
+Documentation for [jackyoung.xyz](https://jackyoung.xyz) — a personal site carrying two real
+tools:
 
-**Image processing runs entirely in the browser**, in
-[src/lib/whiteboard/](src/lib/whiteboard/README.md) — nothing is uploaded and there is no backend
-to host. It was previously a hosted API at `api.jackyoung.xyz`, whose contract is still recorded
-in [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md).
+- the **Whiteboard processor**: upload a photo of a whiteboard or page, optionally mark 4 corners
+  for a perspective transform, tweak processing options, and download a cleaned image;
+- the **Guitar tools**: a chromatic tuner and a chord recogniser that listen to your microphone,
+  on the way to a trainer that measures how long your chord changes take.
+
+**Both run entirely in the browser** — [src/lib/whiteboard/](src/lib/whiteboard/README.md) and
+[src/lib/audio/](src/lib/audio/README.md). Nothing is uploaded and there is no backend to host.
+Whiteboard processing was previously a hosted API at `api.jackyoung.xyz`, whose contract is still
+recorded in [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md).
 
 ## Contents
 
@@ -21,6 +25,8 @@ in [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md).
     - [src/lib/ui/](src/lib/ui/README.md) — design system: tokens, theming, primitives
     - [src/lib/ImageEditor/](src/lib/ImageEditor/README.md) — the editor subsystem
     - [src/lib/whiteboard/](src/lib/whiteboard/README.md) — the image processing pipeline
+    - [src/lib/audio/](src/lib/audio/README.md) — pitch and chord detection
+    - [src/lib/guitar/](src/lib/guitar/README.md) — the guitar tools' components
 
 ## Stack
 
@@ -28,25 +34,35 @@ in [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md).
 `@tailwindcss/typography`. Built with `adapter-static` and `fallback: index.html`, so it ships as
 a **client-side SPA** into `build/`. There is no server runtime.
 
-Dependencies of note: `bits-ui` (`Separator`, `AspectRatio`), `svelte-gestures` (`use:pan`).
+Dependencies of note: `bits-ui` (`Separator`, `AspectRatio`), `svelte-gestures` (`use:pan`),
+`pitchy` (McLeod pitch detection for the tuner), `@vitejs/plugin-basic-ssl` (dev only, see
+[`dev:lan`](#commands)).
 
 ## Commands
 
 ```bash
 npm run dev       # vite dev server
+npm run dev:lan   # the same, over HTTPS on the network — for testing on a phone or tablet
 npm run build     # static build into build/
 npm run preview   # serve the build
 npm run check     # svelte-kit sync && svelte-check
 npm test          # vitest run
 ```
 
+**`dev:lan` exists because of the microphone.** A browser only offers one to a secure context —
+HTTPS, or one of the loopback hosts — so a tablet loading `http://192.168.x.x:5173` cannot open
+one at all, and the guitar tools are dead there. `--mode lan` adds a self-signed certificate and
+`--host` exposes the server; the certificate is untrusted, so every browser shows an interstitial
+first. That is why it is a separate script rather than the default.
+
 **`npm run check` and `npm test` are the two automated gates**, and both are currently clean —
 0 errors, 0 warnings and a passing suite. Any new output is a regression introduced by the change
 in front of you. There is no linter.
 
-Tests cover [src/lib/whiteboard/](src/lib/whiteboard/README.md) only, since it is the one part of
-the codebase that is pure computation with checkable answers. They sit next to the code as
-`*.test.ts`. UI components are not tested.
+Tests cover [src/lib/whiteboard/](src/lib/whiteboard/README.md) and
+[src/lib/audio/](src/lib/audio/README.md) — the two parts of the codebase that are pure
+computation with checkable answers. They sit next to the code as `*.test.ts`. UI components are
+not tested.
 
 ## How this wiki is organised
 
