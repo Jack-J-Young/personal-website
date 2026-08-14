@@ -21,7 +21,7 @@ They are built from [the design system](../ui/README.md) and own no colours beyo
 | `Acceptance.svelte` | The slider that sets how *close* a strum has to be to count. |
 | `ChordPrompt.svelte` | The trainer's face: the chord to play, the one after it, the time, and the streak. |
 | `ChordDiagram.svelte` | A chord box — six strings, four frets, dots where the fingers go. |
-| `ChordSets.svelte` | The tick boxes that decide which chords the drill draws from. |
+| `ChordSets.svelte` | Which chords the drill draws from: a box per set, a chip per chord. |
 | `ScoreBoard.svelte` | The session's numbers, by chord or by change, sorted on whichever column was clicked. |
 | `practice.ts` | The drill: which chords, which one next, whether a strum counts, and what the session adds up to. |
 | `shapes.ts` | What a fingering is, and the two things a diagram needs worked out from it. |
@@ -198,7 +198,7 @@ table. That is worth knowing before reading much into it.
 
 ### The chords, and which one comes next
 
-Three sets, ticked in any combination, drawn from together:
+Three sets, each chord in them switched on or off individually:
 
 | Set | | |
 |---|---|---|
@@ -212,6 +212,15 @@ asked for F♯m7 in the first week is a way of being told to stop.
 
 **Combinable rather than exclusive, because the interesting change crosses the sets.** G→Bm is the
 one that stops people and it does not exist inside either set on its own.
+
+**The selection is a list of chords, not a list of sets.** `chordsIn` takes labels, and the set box
+is a shortcut that turns its whole group on or off. A set that also had to be ticked would be a
+second thing to get wrong — and the useful selection is usually not a whole set anyway, since the
+point of a session is often four chords a song needs and nothing else.
+
+It always returns them in the order the sets are offered rather than the order they were switched
+on. A selection is a set, and one that reordered itself as it was edited would be a different list
+every time it was read.
 
 ### The name is not the chord
 
@@ -386,8 +395,23 @@ what a barre chord diagram is for.
 
 ## ChordSets
 
-Three tick boxes. **Unticking the last set is refused rather than disabled**, because a disabled
-box gives no reason and this one has an obvious one: the drill has to be asking for something.
+A box per set and a chip per chord. The box shows `5/8` and goes indeterminate when a set is
+partly on, which is the state a real selection is usually in.
+
+**A change that would leave fewer than two chords is refused rather than disabled**, because a
+disabled control gives no reason and this one has one: `isDrillable` wants two chords that *sound*
+different, since the drill measures changes and there is no change between a chord and itself.
+That is two distinct names, not two entries — an open G and a barre G would leave `pickNext`
+nothing to pick.
+
+> A refusal has to put the checkbox back by hand. The browser has already flipped it and cleared
+> its indeterminate mark, and Svelte only repaints what its own computed value says has changed —
+> which after a refusal is nothing. The restore recomputes both from state rather than remembering
+> what they were.
+
+Chips are `aria-pressed` buttons rather than checkboxes, so they have no browser-managed state to
+put back, and they fill with the accent colour rather than merely brightening: twenty-two of them
+are read at a glance, and a difference in weight scans faster than a difference in shade.
 
 Changing the selection mid-session redraws only what fell out of the pool. Asking for a chord the
 player has just said they don't want is the one thing the control must not do; redrawing a preview

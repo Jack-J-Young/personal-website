@@ -15,7 +15,7 @@
     import Sensitivity from "$lib/guitar/Sensitivity.svelte";
     import Timeline from "$lib/guitar/Timeline.svelte";
     import {
-        DEFAULT_SETS,
+        DEFAULT_CHORDS,
         chordsIn,
         judgeAttempt,
         leadBarFor,
@@ -59,8 +59,8 @@
 
     // Recomputed by `retarget` rather than reactively, because the first prompt is drawn from it
     // in this same block and a `$:` has not run by then.
-    let sets = DEFAULT_SETS;
-    let pool = chordsIn(sets);
+    let chosen = DEFAULT_CHORDS;
+    let pool = chordsIn(chosen);
 
     let target: DrillChord = pool[0];
     let upcoming: DrillChord = pool[1];
@@ -111,13 +111,13 @@
     }
 
     /**
-     * Ticking a set mid-session can leave a prompt from one that was just unticked. Only the
-     * chords that fell out of the pool are redrawn: asking for a chord the player has just said
+     * Turning a chord off mid-session can leave it on screen as the prompt or the preview. Only
+     * the ones that fell out of the pool are redrawn: asking for a chord the player has just said
      * they don't want is the one thing the control must not do, and redrawing a preview that is
      * still valid would break the promise that the preview is what arrives next.
      */
     function retarget() {
-        pool = chordsIn(sets);
+        pool = chordsIn(chosen);
         if (!pool.includes(upcoming)) upcoming = pickNext(pool, target);
         if (!pool.includes(target)) advance();
     }
@@ -265,7 +265,7 @@
                 </Text>
             </Stack>
 
-            <ChordSets bind:selected={sets} changed={retarget} />
+            <ChordSets bind:selected={chosen} changed={retarget} />
 
             <MicrophoneGate
                 maxBinWidth={MAX_BIN_WIDTH}

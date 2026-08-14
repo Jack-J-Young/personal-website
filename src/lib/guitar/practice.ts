@@ -123,12 +123,31 @@ const POWER_CHORDS: ChordSet = {
 
 export const CHORD_SETS: ChordSet[] = [OPEN, BARRE, POWER_CHORDS];
 
-/** The set the drill starts on, since a drill has to be asking for something. */
-export const DEFAULT_SETS = [OPEN.id];
+/** Every chord there is, which is what a label has to be unique across. */
+export const EVERY_CHORD: DrillChord[] = CHORD_SETS.flatMap((set) => set.chords);
 
-/** Every chord from the ticked sets, in the order the sets are offered. */
-export function chordsIn(sets: string[]): DrillChord[] {
-    return CHORD_SETS.filter((set) => sets.includes(set.id)).flatMap((set) => set.chords);
+/** What the drill starts on, since it has to be asking for something. */
+export const DEFAULT_CHORDS = OPEN.chords.map((chord) => chord.label);
+
+/**
+ * The chosen chords, always in the order the sets are offered rather than the order they were
+ * ticked in — the list is a set, and a set that reordered itself as it was edited would be a
+ * different list every time it was read.
+ */
+export function chordsIn(labels: string[]): DrillChord[] {
+    return EVERY_CHORD.filter((chord) => labels.includes(chord.label));
+}
+
+/**
+ * Whether a selection can be drilled at all.
+ *
+ * Two chords, and two that *sound* different: the drill measures changes, and there is no change
+ * to measure between a chord and itself. An open G and a barre G are two entries and one sound, so
+ * a pool of exactly those would leave `pickNext` with nothing to pick and every prompt following
+ * itself.
+ */
+export function isDrillable(chords: DrillChord[]): boolean {
+    return new Set(chords.map((chord) => chord.name)).size >= 2;
 }
 
 /**

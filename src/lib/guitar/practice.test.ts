@@ -4,9 +4,11 @@ import { matchChords } from "$lib/audio";
 import {
     CHORD_SETS,
     DEFAULT_ACCEPTANCE,
-    DEFAULT_SETS,
+    DEFAULT_CHORDS,
+    EVERY_CHORD,
     chordScores,
     chordsIn,
+    isDrillable,
     judgeAttempt,
     leadBarFor,
     pickNext,
@@ -18,8 +20,14 @@ import {
 } from "./practice";
 import { barresOf, fretWindow } from "./shapes";
 
-const OPEN_CHORDS = chordsIn(DEFAULT_SETS);
-const EVERY_CHORD = chordsIn(CHORD_SETS.map((set) => set.id));
+const OPEN_CHORDS = chordsIn(DEFAULT_CHORDS);
+
+function labelsOf(id: string): string[] {
+    let set = CHORD_SETS.find((candidate) => candidate.id === id);
+    if (!set) throw new Error(`No chord set called "${id}"`);
+
+    return set.chords.map((chord) => chord.label);
+}
 
 function chordNamed(name: string): DrillChord {
     let chord = OPEN_CHORDS.find((candidate) => candidate.name === name);
@@ -77,7 +85,7 @@ describe("the chord sets", () => {
     });
 
     it("names the power chords after their own quality, so they need no tag", () => {
-        let power = chordsIn(["power"]);
+        let power = chordsIn(labelsOf("power"));
 
         expect(power.map((chord) => chord.label))
             .toEqual(["E5", "F5", "G5", "A5", "B5", "C5", "D5"]);
@@ -91,7 +99,7 @@ describe("the chord sets", () => {
             expect(fretWindow(chord.shape).rows).toBeGreaterThanOrEqual(4);
         }
 
-        for (let chord of chordsIn(["barre"])) {
+        for (let chord of chordsIn(labelsOf("barre"))) {
             expect(barresOf(chord.shape).length).toBeGreaterThan(0);
         }
         for (let chord of OPEN_CHORDS) {
@@ -101,12 +109,39 @@ describe("the chord sets", () => {
 });
 
 describe("chordsIn", () => {
-    it("takes the ticked sets in the order they are offered", () => {
-        expect(chordsIn(["power", "open"])).toEqual([...OPEN_CHORDS, ...chordsIn(["power"])]);
+    it("returns chords in the order the sets are offered, not the order they were ticked", () => {
+        // The selection is a set. One that reordered itself as it was edited would be a different
+        // list every time it was read, and the prompt is drawn from an index into it.
+        let jumbled = ["D5", "Am", "F barre", "C"];
+
+        expect(chordsIn(jumbled).map((chord) => chord.label)).toEqual(["C", "Am", "F barre", "D5"]);
     });
 
-    it("has nothing to offer when nothing is ticked", () => {
+    it("ignores a label that names nothing", () => {
+        expect(chordsIn(["C", "H diminished-ninth"]).map((chord) => chord.label)).toEqual(["C"]);
+    });
+
+    it("has nothing to offer when nothing is chosen", () => {
         expect(chordsIn([])).toEqual([]);
+    });
+});
+
+describe("isDrillable", () => {
+    it("needs two chords, because one chord has no change to time", () => {
+        expect(isDrillable(chordsIn(["C"]))).toBe(false);
+        expect(isDrillable(chordsIn(["C", "G"]))).toBe(true);
+        expect(isDrillable([])).toBe(false);
+    });
+
+    it("needs two that sound different, not merely two entries", () => {
+        // An open G and a barre G are one sound. `pickNext` excludes by name, so a pool of exactly
+        // those two would leave it nothing to pick and every prompt following itself.
+        expect(isDrillable(chordsIn(["G", "G barre"]))).toBe(false);
+        expect(isDrillable(chordsIn(["G", "G barre", "C"]))).toBe(true);
+    });
+
+    it("counts every chord there is as drillable", () => {
+        expect(isDrillable(EVERY_CHORD)).toBe(true);
     });
 });
 

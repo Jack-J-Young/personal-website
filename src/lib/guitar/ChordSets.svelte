@@ -1,30 +1,62 @@
 <script lang="ts">
-    import { CHORD_SETS } from "./practice";
+    import { CHORD_SETS, chordsIn, isDrillable, type ChordSet } from "./practice";
 
+    /** Labels of every chord the drill may ask for. */
     export let selected: string[] = [];
 
     /** Called after a change, so the drill can redraw a prompt that is no longer in the pool. */
     export let changed: () => void = () => {};
 
-    /**
-     * Unticking the last set is refused rather than disabled, because a disabled box gives no
-     * reason and this one has an obvious one: the drill has to be asking for something.
-     */
-    function toggle(id: string, box: HTMLInputElement) {
-        let next = selected.includes(id)
-            ? selected.filter((other) => other !== id)
-            : [...selected, id];
+    $: chosen = new Set(selected);
+    $: counts = new Map(CHORD_SETS.map((set) => [set.id, countOn(set, chosen)]));
 
-        if (next.length === 0) {
-            // The browser has already unticked it, and Svelte only repaints `checked` when the
-            // value it computes changes — refusing the click leaves it exactly as it was. Nothing
-            // will put the box back, so this does.
-            box.checked = true;
+    function countOn(set: ChordSet, on: Set<string>): number {
+        return set.chords.filter((chord) => on.has(chord.label)).length;
+    }
+
+    /**
+     * Refused rather than disabled, because a disabled control gives no reason and this one has
+     * one: below two chords there is no change left to time.
+     */
+    function commit(next: string[], undo?: () => void) {
+        if (!isDrillable(chordsIn(next))) {
+            undo?.();
             return;
         }
 
         selected = next;
         changed();
+    }
+
+    /**
+     * The set box turns its whole group on, or off if it is already fully on. It is a shortcut
+     * rather than a separate setting — what the drill asks for is the chords, and a set that also
+     * had to be ticked would be a second thing to get wrong.
+     */
+    function toggleSet(set: ChordSet, box: HTMLInputElement) {
+        let labels = set.chords.map((chord) => chord.label);
+        let all = counts.get(set.id) === set.chords.length;
+
+        let next = all
+            ? selected.filter((label) => !labels.includes(label))
+            : [...selected, ...labels.filter((label) => !chosen.has(label))];
+
+        // The browser has already flipped the box and cleared its indeterminate mark, and Svelte
+        // only repaints what its own computed value says has changed — which after a refusal is
+        // nothing. So a refusal puts the box back from the state it failed to change.
+        commit(next, () => {
+            let on = counts.get(set.id) ?? 0;
+            box.checked = on === set.chords.length;
+            box.indeterminate = on > 0 && on < set.chords.length;
+        });
+    }
+
+    function toggleChord(label: string) {
+        commit(
+            chosen.has(label)
+                ? selected.filter((other) => other !== label)
+                : [...selected, label],
+        );
     }
 </script>
 
@@ -32,23 +64,40 @@
     <legend>Chords to drill</legend>
 
     {#each CHORD_SETS as set (set.id)}
-        <label class="set" class:on={selected.includes(set.id)}>
-            <input
-                type="checkbox"
-                checked={selected.includes(set.id)}
-                on:change={(event) => toggle(set.id, event.currentTarget)} />
-            <span class="name">{set.name}</span>
-            <span class="count">{set.chords.length}</span>
-            <span class="about">{set.about}</span>
-        </label>
+        {@const on = counts.get(set.id) ?? 0}
+        <div class="set">
+            <label class="head">
+                <input
+                    type="checkbox"
+                    checked={on === set.chords.length}
+                    indeterminate={on > 0 && on < set.chords.length}
+                    on:change={(event) => toggleSet(set, event.currentTarget)} />
+                <span class="name">{set.name}</span>
+                <span class="count" class:none={on === 0}>{on}/{set.chords.length}</span>
+            </label>
+
+            <p class="about">{set.about}</p>
+
+            <div class="chords" role="group" aria-label={set.name}>
+                {#each set.chords as chord (chord.label)}
+                    <button
+                        class="chord"
+                        class:on={chosen.has(chord.label)}
+                        aria-pressed={chosen.has(chord.label)}
+                        on:click={() => toggleChord(chord.label)}>
+                        {chord.name}{#if chord.tag}<span class="tag">{chord.tag}</span>{/if}
+                    </button>
+                {/each}
+            </div>
+        </div>
     {/each}
 </fieldset>
 
 <style>
     .sets {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-        gap: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
         width: 100%;
     }
 
@@ -62,27 +111,16 @@
     }
 
     .set {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        align-items: center;
-        gap: 0.5rem;
-
         padding: 0.625rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
+    }
+
+    .head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         cursor: pointer;
-
-        transition:
-            border-color 0.15s,
-            background-color 0.15s;
-    }
-
-    .set:hover {
-        border-color: var(--accent);
-    }
-
-    .set.on {
-        background-color: var(--surface-raised);
     }
 
     input {
@@ -95,18 +133,65 @@
         color: var(--text);
     }
 
+    /* Pushed to the far end, where the eye can compare the three without reading the names. */
     .count {
+        margin-left: auto;
         font-family: var(--font-mono);
         font-size: 0.75rem;
         color: var(--text-muted);
     }
 
-    /* Spans the row under the name rather than sitting beside it: the sets are told apart by what
-       they are for, and that sentence is the only place it is said. */
+    .count.none {
+        opacity: 0.5;
+    }
+
     .about {
-        grid-column: 2 / -1;
+        margin: 0.25rem 0 0.5rem;
         font-size: 0.75rem;
         line-height: 1.4;
         color: var(--text-muted);
+    }
+
+    .chords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3125rem;
+    }
+
+    .chord {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.25rem;
+
+        padding: 0.1875rem 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+
+        transition:
+            color 0.15s,
+            border-color 0.15s,
+            background-color 0.15s;
+    }
+
+    .chord:hover {
+        border-color: var(--accent);
+        color: var(--text);
+    }
+
+    /* Filled rather than merely brighter. Twenty-two of these are read at a glance, and a
+       difference in weight is quicker to scan than a difference in shade. */
+    .chord.on {
+        border-color: var(--accent);
+        background-color: var(--accent);
+        color: var(--accent-contrast);
+    }
+
+    .tag {
+        font-size: 0.625rem;
+        opacity: 0.7;
     }
 </style>

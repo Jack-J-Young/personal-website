@@ -80,13 +80,18 @@ getting faster — needs the old ones kept and dated.
 trainer's three switches — the chord sets, the fingering toggle and the sound toggle — still reset
 on every load.
 
-The sets are the worst of them: every visit starts on the open chords, which is exactly wrong for
-someone who came back to drill barre chords. Sound is a close second, since a setting whose whole
-purpose is "not right now, I am in a shared room" is the one most annoying to reset.
+The chord selection is the worst of them, and got worse when it became per-chord: every visit
+starts on the eight open chords, so someone who came back to drill the four chords of one song
+has to pick them out again. Sound is a close second, since a setting whose whole purpose is "not
+right now, I am in a shared room" is the one most annoying to reset.
 
 What is left is genuinely small — the machinery exists, and the only reason `remembered` did not
 cover these too is that it stores a number and these are a list of strings and two booleans. A
 second constructor beside it is a few lines.
+
+The selection has one wrinkle the sliders did not: a stored label may no longer name a chord.
+`chordsIn` already ignores those, but a restore that silently dropped half a saved selection and
+left the drill on whatever remained would be worse than starting from the default.
 
 ## The sensitivity slider is still a guess
 `planned` `low` `src/lib/guitar/Sensitivity.svelte` `src/lib/guitar/sensitivity.ts`
