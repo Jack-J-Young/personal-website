@@ -22,6 +22,7 @@ export default {
         "accent-subtle": "var(--accent-subtle)",
         "in-tune": "var(--in-tune)",
         "out-of-tune": "var(--out-of-tune)",
+        caution: "var(--caution)",
       },
       borderRadius: {
         sm: "var(--radius-sm)",

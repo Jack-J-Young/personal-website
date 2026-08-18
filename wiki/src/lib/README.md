@@ -11,6 +11,9 @@ Shared code, reachable via the `$lib` alias.
 - [audio/](audio/README.md) — pitch and chord detection from a microphone. Pure functions apart
   from the one module that opens the device.
 - [guitar/](guitar/README.md) — the components the guitar tools are drawn with.
+- [projects/](projects/README.md) — the generated content bundle and the components the project
+  pages are drawn with. Reads JSON built from a notes vault by
+  [`scripts/content.mjs`](../../guides/publishing-notes.md); parses nothing itself.
 
 ## theme.ts
 

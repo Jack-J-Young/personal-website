@@ -9,6 +9,11 @@ node_modules
 # Developer-specific agent context. Project-wide facts belong in wiki
 CLAUDE.md
 
+# Built from a notes vault this repo does not contain, by `npm run content`.
+# See wiki/guides/publishing-notes.md.
+/src/lib/projects/generated
+/static/project-media
+
 # OS
 .DS_Store
 Thumbs.db

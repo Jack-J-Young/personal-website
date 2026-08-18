@@ -52,7 +52,9 @@ export default defineConfig(({ mode }) => {
 		},
 
 		test: {
-			include: ['src/**/*.test.ts']
+			// scripts/ is in scope because the content pipeline's publish filter is the one piece
+			// of the codebase whose failure mode is a leak rather than a bug.
+			include: ['src/**/*.test.ts', 'scripts/**/*.test.mjs']
 		}
 	};
 });

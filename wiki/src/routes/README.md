@@ -6,7 +6,10 @@ these are client-rendered unless a route opts into prerendering.
 | Route | File | Notes |
 |---|---|---|
 | `/` | `+page.svelte` | Landing page. Links to the whiteboard processor. |
-| `/about` | `about/+page.svelte` | Bio and links. **The only prerendered route** — `about/+page.ts` sets `prerender = true`. It deliberately does *not* disable client-side rendering: the theme toggle in the nav needs JavaScript, and a `csr = dev` here would leave it inert in production while working fine in dev. |
+| `/about` | `about/+page.svelte` | Bio and links. Prerendered — `about/+page.ts` sets `prerender = true`. It deliberately does *not* disable client-side rendering: the theme toggle in the nav needs JavaScript, and a `csr = dev` here would leave it inert in production while working fine in dev. |
+| `/projects` | `projects/+page.svelte` | Index of [published projects](../lib/projects/README.md). Prerendered. |
+| `/projects/[slug]` | `projects/[slug]/+page.svelte` | One project: its write-up, its photos, and its iteration notes inline. Prerendered from the manifest. |
+| `/projects/[slug]/[note]` | `projects/[slug]/[note]/+page.svelte` | One iteration note on its own page, with links to the ones either side. Prerendered. |
 | `/whiteboard` | `whiteboard/+page.svelte` | Marketing page: before/after slider, changelog, privacy copy. |
 | `/whiteboard/s` | `whiteboard/s/+page.svelte` | The editor. See [ImageEditor](../lib/ImageEditor/README.md). |
 | `/guitar` | `guitar/+page.svelte` | Landing page for the guitar tools. |
@@ -31,6 +34,25 @@ would strand anyone on the route.
 
 **The guitar routes are ordinary pages** and keep the chrome. They are laid out in a `narrow`
 `Container` like any other page, so there is nothing for the nav to duplicate.
+
+## The project pages
+
+The three of them are the only routes in the repo that are **prerendered from data**. `entries` in
+each `+page.ts` reads the [content manifest](../lib/projects/README.md#reading-the-bundle) and
+hands SvelteKit a slug per project — and, for notes, a slug pair per note — so the build writes
+`build/projects/<slug>.html` rather than leaving them to the SPA fallback.
+
+That is the point of the whole section rather than a detail. Without it a hard load of
+`/projects/x` would be served `index.html` and assembled in the browser, so there would be no HTML
+for a crawler to index or for a chat client to preview — which is most of what a project page is
+for.
+
+**Every note gets a page even though the project shows all of them inline.** A note that cannot be
+linked to cannot be pointed at, by another note or by anyone reading it, and prerendering one is
+nearly free.
+
+The pages hold no content logic. Markdown was rendered to HTML before the site ever saw it, so
+`Prose` takes a string and the routes are layout.
 
 ## The guitar pages
 

@@ -256,13 +256,6 @@
             <Stack gap="sm">
                 <Eyebrow>Tool</Eyebrow>
                 <Heading level={1}>Chord trainer</Heading>
-                <Text size="lg" muted>
-                    It asks for a chord and shows you the one after it, so what you are practising
-                    is the change rather than the chord. A rising chime means it landed and a
-                    falling one means it didn't, so you can keep your eyes on the fretboard. Each
-                    change is timed from strum to strum, and the table at the bottom says which
-                    ones are holding you up.
-                </Text>
             </Stack>
 
             <ChordSets bind:selected={chosen} changed={retarget} />
@@ -332,122 +325,6 @@
                     </Stack>
                 </Card>
             {/if}
-        </Stack>
-    </Section>
-
-    <Section space="tight">
-        <Stack gap="sm">
-            <Heading level={2} size="sm">What it can and cannot check</Heading>
-            <Text muted>
-                <strong>It hears chords, not hands.</strong> An E-shape barre at the fifth fret and
-                an open A are the same six notes, so nothing in the audio could tell them apart —
-                asked for a barre chord, you can play the open one and it will pass. The barre set
-                is a prompt and a diagram, not a check. Ticking it alongside the open chords is
-                still the useful thing to do, because G&nbsp;→&nbsp;Bm is the change that stops
-                people and it does not exist inside either set on its own.
-            </Text>
-            <Text muted>
-                Power chords go the other way and are checked properly. A D5 is two of the three
-                notes in a D, so a full D scores about 81% against it — under the 85% bar, since
-                the D wins the ranking outright. Asked for D5 and handed a D, it says no.
-            </Text>
-            <Text muted>
-                <strong>Fingering is off by default</strong>, and that is the point: a diagram
-                under every prompt turns the drill into copying, and the times stop measuring
-                whether you remember the shape. Turn it on when a barre chord is new, off once it
-                isn't.
-            </Text>
-        </Stack>
-    </Section>
-
-    <Section space="tight">
-        <Stack gap="sm">
-            <Heading level={2} size="sm">What counts as playing it</Heading>
-            <Text muted>
-                A strum passes if the chord asked for scores at least {Math.round($acceptance * 100)}%,
-                or at least {Math.round(leadBar * 100)}% when it is also the best match found. Two
-                bars rather than one, because coming first is itself evidence: a chord that won
-                only has to be plausible, and one that came second has to be convincing on its own.
-            </Text>
-            <Text muted>
-                The acceptance slider moves both — a quiet guitar, a laptop microphone across the
-                room, or a room with something else going on in it all cost a few percent, and a
-                tool that fails chords you know you played is worse than one set a little loose.
-                One control rather than two, because the second bar follows the first: the two are
-                the same question asked of different evidence, and reconciling two confidence
-                sliders is not a job to hand anyone.
-            </Text>
-            <Text muted>
-                The point of the second bar is that a chord can be played and still lose. A major
-                whose third came out quiet — a muted B string, a thumb not quite clearing the fret
-                — fits the power chord's two-note template more closely than its own three-note
-                one, because the template beating it is the one that never asked for the note that
-                went missing. Asked for D and told D5, you played a D, so it counts.
-            </Text>
-            <Text muted>
-                It is not generous about the third being wrong rather than quiet. An Am scored
-                against A reaches about 69%, which is the mistake a drill exists to catch — and it
-                is also where the slider stops being forgiving and starts being wrong. Below 70%
-                that mistake begins to pass. The slider goes there anyway, because a bad microphone
-                is a real problem and you know what you played, but the number turns amber when it
-                does.
-            </Text>
-        </Stack>
-    </Section>
-
-    <Section space="tight">
-        <Stack gap="sm">
-            <Heading level={2} size="sm">What the board counts</Heading>
-            <Text muted>
-                Two groupings of the same session. <strong>Chords</strong> asks whether you know a
-                shape; <strong>changes</strong> asks whether you know a move, which is the honest
-                unit — C&nbsp;→&nbsp;G and Em&nbsp;→&nbsp;G are not the same difficulty. There are
-                eight of the first and fifty-six of the second, so the chord board is readable in a
-                couple of minutes and the change board takes a proper session before its ranking
-                means anything.
-            </Text>
-            <Text muted>
-                <strong>Error</strong> is how often a strum was recognised as some other chord.
-                Only strums the tool could name count either way, so playing too quietly does not
-                show up here — it isn't evidence about the chord. Best against average is the
-                useful pair: a low best with a high average is a change you can make and haven't
-                learned, and it is a different problem from one you have never made at all.
-            </Text>
-        </Stack>
-    </Section>
-
-    <Section space="tight">
-        <Stack gap="sm">
-            <Heading level={2} size="sm">About the times</Heading>
-            <Text muted>
-                A time is the gap between the strum that landed the last chord and the strum that
-                landed this one — a real chord change, not a reaction test. That only works because
-                the next chord is already on screen: you are never timed on reading it.
-            </Text>
-            <Text muted>
-                Both ends are the strum itself, not the moment it was named. Naming needs three
-                quarters of a second of audio, and charging you for the tool's own latency would
-                add that to every change. It is the same delay at both ends, so it cancels.
-            </Text>
-            <Text muted>
-                That same window is a floor on what can be measured: change inside about a second
-                and the first chord never gets a clean window to be recognised in, so it will not
-                register at all. Wait for the chime, then change — which means letting each chord
-                ring and moving your hand while it does, the thing worth practising anyway.
-            </Text>
-            <Text muted>
-                Part of that second is the tone itself. Anything played through a speaker is audio
-                the microphone is about to hear, so the strum detector is deliberately deaf for as
-                long as a chime can be heard for — otherwise a chime landing on a chord that has
-                decayed looks exactly like a new strum. Turning the sound off removes that pause
-                along with the tones.
-            </Text>
-            <Text muted>
-                The first chord of a session has nothing to be timed from, so it isn't. Neither is
-                the one after a skip. Wrong strums cost nothing except the streak, which only
-                counts chords found on the first attempt, and if nothing registers at all your
-                playing is not clearing the dashed band — the sensitivity slider moves it.
-            </Text>
         </Stack>
     </Section>
 </Container>

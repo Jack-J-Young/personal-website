@@ -19,10 +19,12 @@ recorded in [WhiteboardSession.ts](src/lib/ImageEditor/WhiteboardSession.ts.md).
 - [Issues](issues.md) — repo-level issues (dependencies, config, root files)
 - **Guides**
   - [Adding a tool](guides/adding-a-tool.md) — the ImageEditor tool recipe
+  - [Publishing notes](guides/publishing-notes.md) — how a note in Obsidian becomes a project page
 - **Code** (mirrors the source tree)
   - [src/routes/](src/routes/README.md) — pages and routing
   - [src/lib/](src/lib/README.md) — shared components
     - [src/lib/ui/](src/lib/ui/README.md) — design system: tokens, theming, primitives
+    - [src/lib/projects/](src/lib/projects/README.md) — the content bundle and the pages built from it
     - [src/lib/ImageEditor/](src/lib/ImageEditor/README.md) — the editor subsystem
     - [src/lib/whiteboard/](src/lib/whiteboard/README.md) — the image processing pipeline
     - [src/lib/audio/](src/lib/audio/README.md) — pitch and chord detection
@@ -48,7 +50,13 @@ npm run build                # static build into build/
 npm run preview              # serve the build
 npm run check                # svelte-kit sync && svelte-check
 npm test                     # vitest run
+npm run content              # build the project pages from sample-vault/
 ```
+
+**`npm run content` reads a notes vault and writes the bundle the project pages are built from.**
+The vault is a separate private repo, so this is not part of `vite build` and its output is
+gitignored — a fresh clone has no projects until it is run. `-- --vault <path>` points it at a real
+one. See [publishing notes](guides/publishing-notes.md).
 
 **`--no-reload` is for the guitar tools.** Hot reloading is the right default until the page is
 holding state that took effort to reach — a microphone permission and a running practice session —

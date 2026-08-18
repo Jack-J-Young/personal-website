@@ -44,7 +44,10 @@ Three more exist for the [guitar tools](../guitar/README.md):
 | `--caution` | A setting that has been moved somewhere it will misbehave. The same amber, for the same reason it is amber, but it is not about tuning and a token named for the tuner would be the wrong thing to reach for from anywhere else. |
 
 `--caution` and `--out-of-tune` hold the same value in dark and differ only in light, where the
-caution amber is darker still — it carries small body text, which the tuner's readout does not.
+caution amber is darker still — it carries small body text, which the tuner's readout does not. It
+is mapped to `text-caution` as well, since
+[the project status chip](../projects/README.md#statuschipsvelte) needs it from a class rather than
+a `<style>` block.
 **If a fourth amber is ever wanted, it is one of these two**, not a new one.
 
 All three are darkened in light mode for contrast on white, the same way the accent is.
@@ -113,6 +116,7 @@ why `--bg-translucent` and `--accent-subtle` exist rather than `bg-bg/85`.
 | `SocialLink` | Square icon-only `<a>`, same look as `IconButton` |
 | `SocialLinks` | The site's contact row — email and GitHub |
 | `icons/` | Inline SVG icon components drawn with `currentColor` |
+| `Prose` | Long-form HTML rendered elsewhere, given the site's typography |
 | `Card` | Surface panel, `padded` and `interactive` |
 | `ConfirmDialog` | Modal "are you sure", opened with `show()`, emits `confirm`/`cancel` |
 | `ThemeToggle` | Sun/moon toggle |
@@ -123,6 +127,11 @@ why `--bg-translucent` and `--accent-subtle` exist rather than `bg-bg/85`.
 `Heading` splits `level` from `size` on purpose: a page can keep a correct heading outline
 without being forced into a type scale.
 
+**`Nav` shows the icon alone below `sm`.** Five entries plus the `jackyoung.xyz` wordmark overflow
+375px by 65px, and the wordmark is the 105 of those pixels that is not a link anyone needs — the
+icon beside it goes to the same place. Note that this leaves no slack: a sixth entry overflows a
+phone again, and the answer then is a menu rather than another thing to hide.
+
 `ConfirmDialog` is opened by calling `show()` on the component, rather than by setting an `open`
 prop. It wraps a native `<dialog>`, so focus trapping, Escape and the backdrop come from the
 browser — and the element's own state is then the only source of truth. A boolean prop would have
@@ -130,6 +139,27 @@ to be written back whenever the browser dismissed the dialog itself, and one mis
 leaves the prop stuck at `true`; asking again would then do nothing, because assigning `true` to
 something already `true` changes nothing and the dialog would never reopen. That is not
 hypothetical — it is exactly what the first version did.
+
+## Prose
+
+The one component that styles markup it did not render. It takes an HTML string — today, a note
+[rendered from the vault](../projects/README.md) — and drops it into a `@tailwindcss/typography`
+container.
+
+**The tokens reach it through the plugin's own variables.** `Prose` sets `--tw-prose-body`,
+`--tw-prose-headings`, `--tw-prose-links` and the rest on its wrapper from the site's tokens, which
+works because those are inherited custom properties and the plugin's rules are descendant
+selectors: `.prose :where(p)` reads `--tw-prose-body` from whatever ancestor defined it. So prose
+themes with everything else instead of carrying a second palette, and `prose-invert` is never
+needed.
+
+Content Svelte did not render gets no scoping class, so the handful of extra rules — image borders,
+link underlines, the code block's border — are `:global()`. That is the correct use of it rather
+than an escape hatch: there is no other way to reach an `{@html}` child.
+
+`table` is `display: block; overflow-x: auto` so a wide table scrolls inside itself. Left alone it
+pushes the whole page sideways on a phone, which breaks every other block on the page and not just
+the table.
 
 ## Variant, or new component?
 
